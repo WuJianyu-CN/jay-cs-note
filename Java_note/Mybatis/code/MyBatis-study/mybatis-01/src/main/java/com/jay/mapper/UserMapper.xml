@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jay.mapper.UserMapper">
+
+    <select id="getUserLike" resultType="com.jay.pojo.User">
+        select * from mybatis.user where name like concat('%', #{value}, '%');
+    </select>
+
+    <select id="getUserList" resultType="com.jay.pojo.User">
+        SELECT * FROM mybatis.user;
+    </select>
+
+    <select id="getUserById" parameterType="int" resultType="com.jay.pojo.User">
+        SELECT * FROM mybatis.user WHERE id = #{id}
+    </select>
+
+    <select id="getUserById2" parameterType="map" resultType="com.jay.pojo.User">
+        SELECT * FROM mybatis.user WHERE id = #{helloId} and name = #{name}
+    </select>
+
+    <insert id="addUser" parameterType="com.jay.pojo.User">
+        INSERT INTO mybatis.user (id, name, pwd) VALUES (#{id}, #{name}, #{pwd});
+    </insert>
+
+    <!--    pass key of map-->
+    <insert id="addUser2" parameterType="map">
+        insert into mybatis.user (id, pwd) values (#{userid}, #{password});
+    </insert>
+
+    <update id="updateUser" parameterType="com.jay.pojo.User">
+        update mybatis.user set name = #{name}, pwd=#{pwd} where id=#{id};
+    </update>
+
+    <delete id="deleteUser" parameterType="int">
+        delete from mybatis.user where id = #{id};
+    </delete>
+</mapper>

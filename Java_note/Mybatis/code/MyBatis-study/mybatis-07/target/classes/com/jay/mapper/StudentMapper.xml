@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jay.mapper.StudentMapper">
+
+    <!-- -->
+    <select id="getStudent2" resultMap="studentTeacher2">
+        select s.id as sid, s.name as sname, t.name as tname
+        from student s, teacher t
+        where s.tid = t.id
+    </select>
+
+    <resultMap id="studentTeacher2" type="Student">
+        <result property="id" column="sid"/>
+        <result property="name" column="sname"/>
+        <association property="teacher" javaType="Teacher">
+            <result property="name" column="tname"/>
+        </association>
+    </resultMap>
+
+
+    <!-- ===============================-->
+
+    <!--
+        1: query all students informations
+        2. query corresponding teacher by tid of student
+    -->
+
+    <select id="getStudent" resultMap="studentTeacher">
+        select * from student;
+    </select>
+
+    <resultMap id="studentTeacher" type="Student">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <!-- for complicated property, we should handle it in other way:
+         association    <==> instance
+         collection     <==> collection
+        -->
+        <association property="teacher" column="tid" javaType="teacher" select="getTeacher"/>
+    </resultMap>
+
+    <select id="getTeacher" resultType="teacher">
+        select * from teacher where id = #{id}
+    </select>
+</mapper>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jay.mapper.TeacherMapper">
+
+    <select id="getTeachers" resultType="teacher">
+        select * from mybatis.teacher
+    </select>
+
+    <select id="getTeacher" resultMap="teacherStudentMap">
+        select s.id as sid, s.name as sname, t.name as tname, t.id as tid
+        from student as s,
+            teacher as t
+        where s.tid = t.id
+        and t.id = #{tid};
+    </select>
+
+    <resultMap id="teacherStudentMap" type="teacher">
+        <id property="id" column="tid"/>
+        <result property="id" column="tid"/>
+        <result property="name" column="tname"/>
+        <collection property="students" ofType="Student">
+            <result property="id" column="sid"/>
+            <result property="name" column="sname"/>
+        </collection>
+    </resultMap>
+
+
+    <!--  =========================================== -->
+
+    <select id="getTeacher2" resultMap="teacherStudentMap2">
+        select * from mybatis.teacher where id = #{tid}
+    </select>
+
+    <resultMap id="teacherStudentMap2" type="teacher">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <collection property="students" ofType="Student" select="getStudent" column="id"/>
+    </resultMap>
+
+    <select id="getStudent" resultType="Student">
+        select *
+        from mybatis.student
+        where tid=#{tid}
+    </select>
+
+</mapper>

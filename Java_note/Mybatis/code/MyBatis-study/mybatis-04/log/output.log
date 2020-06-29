@@ -1,0 +1,3 @@
+09:06:43.283 [main] INFO  com.jay.mapper.UserMapperTest - slf4j info
+09:06:43.285 [main] WARN  com.jay.mapper.UserMapperTest - slf4j warn
+09:06:43.285 [main] ERROR com.jay.mapper.UserMapperTest - slf4j error

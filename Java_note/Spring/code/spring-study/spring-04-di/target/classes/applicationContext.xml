@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="address" class="com.jay.pojo.Address">
+        <property name="address" value="Nanjing"/>
+    </bean>
+
+
+    <bean id="student" class="com.jay.pojo.Student">
+        <!-- Straight Values (Primitives, Strings, and so on) -->
+        <property name="name" value="Jay"/>
+
+        <!-- References to Other Beans (Collaborators) -->
+        <property name="address" ref="address"/>
+
+        <!-- Arrays -->
+        <property name="books">
+            <array>
+                <value>san guo yan yi</value>
+                <value>shui hu zhuan</value>
+                <value>xi you ji</value>
+                <value>hong lou meng</value>
+            </array>
+        </property>
+
+        <!-- List -->
+        <property name="hobbies">
+            <list>
+                <value>singing</value>
+                <value>coding</value>
+                <value>dancing</value>
+            </list>
+        </property>
+
+        <!-- Map -->
+        <property name="card">
+            <map>
+                <entry key="ID" value="111111222222223333"/>
+                <entry key="ICBC" value="123123"/>
+            </map>
+        </property>
+
+        <!-- Set -->
+        <property name="games">
+            <set>
+                <value>LOL</value>
+                <value>KOF</value>
+            </set>
+        </property>
+
+        <!-- Null -->
+        <property name="wife">
+            <null/>
+        </property>
+
+        <!-- Properties -->
+        <property name="info">
+            <props>
+                <prop key="sid">MP1833034</prop>
+                <prop key="name">Jay</prop>
+            </props>
+        </property>
+
+    </bean>
+</beans>
