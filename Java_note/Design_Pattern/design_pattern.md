@@ -1001,7 +1001,162 @@ v2 => Video{name='jayVideo', createTime=Mon Jun 29 09:29:55 CST 2020}
 
 # 7. 桥接模式
 
+* 桥接模式是将抽象部分与它的实现部分分离，使他们都可以独立地变化。它是一种对象结构性模式，又称为柄体（Handle and Body）模式或接口（Interface）模式。
 
+
+
+![image-20200629153627079](design_pattern.assets/image-20200629153627079.png)
+
+以上的多继承结构耦合性太强，不符合单一职责原则。增加一种类型如（手表）需要在类型下再增加多个品牌。
+
+我们可以使用桥接模式将它解耦。
+
+分析：这个场景中有两个变化的维度：品牌，类型。两个维度相交的地方就是一个产品。
+
+
+
+示例代码：
+
+1. `Brand.java` 品牌接口：
+
+   ``` Java
+   /**
+    * brand interface
+    */
+   public interface Brand {
+       void brandInfo();
+   }
+   
+   ```
+
+2. `Apple.java`，`Dell.java` 实现 `Brand` 品牌接口 ：
+
+   ```Java
+   /**
+    * Apple brand
+    */
+   public class Apple implements Brand {
+       @Override
+       public void brandInfo() {
+           System.out.print("Apple ");
+       }
+   }
+   ```
+
+   ```Java
+   /**
+    * Dell brand
+    */
+   public class Dell implements Brand {
+       @Override
+       public void brandInfo() {
+           System.out.print("Dell ");
+       }
+   }
+   ```
+
+3. `Computer.java` 抽象类，使用组合方式添加 `Brand` 接口：
+
+   ``` Java
+   /**
+    * abstract Computer class
+    */
+   public abstract class Computer {
+   
+       // composition, Brand
+       protected Brand brand;
+   
+       public Computer(Brand brand) {
+           this.brand = brand;
+       }
+   
+       public void info() {
+           brand.brandInfo();
+       }
+   }
+   ```
+
+4. `Desktop.java`，`Laptop.java` 继承了 `Computer.java`：
+
+   ```Java
+   /**
+    * concrete computer: Desktop
+    */
+   public class Desktop extends Computer {
+       public Desktop(Brand brand) {
+           super(brand);
+       }
+   
+       @Override
+       public void info() {
+           super.info();
+           System.out.println("Desktop");
+       }
+   }
+   ```
+
+   ```Java
+   /**
+    * concrete computer: Laptop
+    */
+   public class Laptop extends Computer {
+       public Laptop(Brand brand) {
+           super(brand);
+       }
+   
+       @Override
+       public void info() {
+           super.info();
+           System.out.println("Laptop");
+       }
+   }
+   ```
+
+5. 测试类：
+
+   ```Java
+   @Test
+   public void test1() {
+       // Apple laptop
+       Computer computer = new Laptop(new Apple());
+       computer.info();
+   
+       // Dell DeskTop
+       Computer computer2 = new Desktop(new Dell());
+       computer2.info();
+   }
+   ```
+
+6. 输出结果：
+
+   ```log
+   Apple Laptop
+   Dell Desktop
+   ```
+
+
+
+桥接模式分析：
+
+优点
+
+* 桥接模式类似于多继承方案，但是多继承方案违背了类的单一职责原则，复用性较差，类的个数也非常多，桥接模式是比多继承方案更好的解决方法。极大的减少了子类的个数，从而降低管理和维护的成本；
+* 桥接模式提高了系统的可扩容性，在两个变化维度中任意展开一个维度，都不需要修改原有系统。符合开闭原则，就像一座桥，可以把两个变化的维度连接起来。
+
+
+
+缺点：
+
+* 桥接模式的引入会增加系统的理解与设计难度，由于聚合关联关系建立在抽象层，要求开发者针对抽象进行设计与编程；
+* 桥接模式要求正确识别出系统中两个独立变化的维度，因此其使用范围具有一定的局限性。
+
+
+
+经典案例：
+
+* Java 语言通过 Java 虚拟机实现了平台的无关性；
+* AWT 中的 Peer 架构；
+* JDBC 驱动程序。
 
 
 
@@ -1022,7 +1177,7 @@ v2 => Video{name='jayVideo', createTime=Mon Jun 29 09:29:55 CST 2020}
 
 
 
-## 10.1 静态代理
+## 8.1 静态代理
 
 角色分析：
 
@@ -1128,7 +1283,7 @@ v2 => Video{name='jayVideo', createTime=Mon Jun 29 09:29:55 CST 2020}
 
 
 
-## 10.2 加深理解
+## 8.2 加深理解
 
 1. 改动原有的业务代码，是企业开发的大忌；
 2. 在不修改原有代码的情况下，横向加入功能。
@@ -1254,7 +1409,7 @@ v2 => Video{name='jayVideo', createTime=Mon Jun 29 09:29:55 CST 2020}
 
    
 
-## 10.3 动态代理
+## 8.3 动态代理
 
 * 动态代理和静态代理角色一样；
 * 动态代理的代理类是动态生成的，不是我们直接写好的；
