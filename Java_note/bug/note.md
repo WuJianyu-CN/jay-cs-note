@@ -1,6 +1,6 @@
-# 一 bug
+# 一 Spring
 
-## 1. 
+## 1. `<context:annotation-config/>` 配置错误
 
 > XML文件报“The matching wildcard is strict, but no declaration can be found for element 'context:annotation-config'.”
 
@@ -18,7 +18,7 @@ The matching wildcard is strict, but no declaration can be found for element 'co
 
 
 
-## 2. 
+## 2. Spring 整合 MyBatis 时出错
 
 Spring 整合 MyBatis 时出错：
 
@@ -93,3 +93,34 @@ org.springframework.beans.factory.BeanCreationException: Error creating bean wit
   ```
 
 对比后发现， `com.jay.mapper.UserMapper` 确实被重复注册了，只需要在 `mybatis-config.xml`中取消注册即可解决此问题。
+
+
+
+# 二 MyBatis 
+
+## 1 驼峰转换
+
+
+
+![img](note.assets/0MT1U57]_FUGST$J`11@3LR-1593420616463.png)
+
+![image-20200624093044758](note.assets/image-20200624093044758-1593420616463.png)
+
+
+
+![image-20200624093053374](note.assets/image-20200624093053374-1593420616463.png)
+
+![image-20200624093102716](note.assets/image-20200624093102716-1593420616463.png)
+
+![image-20200624093112634](note.assets/image-20200624093112634-1593420616463.png)
+
+我已经在 Settings 里面添加了 `mapUnderscoreToCamelcase` 为 `true`， debug 可以看到 `sqlSession` 里面配置也成功了。但是反射时报错：没有 `create_time` 属性的 getter 方法。
+
+这里我写的是 `create_time` 如果改成 `createTime` 就不会报错。因为可以找到 getter 方法。但是这里的驼峰转换好像没有起作用
+
+因为#{}这里面对应的是实体类，所以不能是  `create_time `而应该是 `createTime`
+
+select的时候可以自动对应上
+
+驼峰转换是指数据库里的下划线的字段名可以与实体类驼峰命名的属性对应
+
