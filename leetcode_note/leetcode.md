@@ -25,3 +25,63 @@
 
 
 **教材例题（剑指 offer） + 课后习题 （LeetCode》+ 考前冲刺（LeetCode 热题）**
+
+
+
+# 2. 剑指 Offer
+
+
+
+使用 哈希表
+
+``` Java
+class Solution {
+    public int findRepeatNumber(int[] nums) {
+
+        if(nums == null){
+            return -1;
+        }
+
+        Set<Integer> set = new HashSet<>();
+        for(var num : nums){
+            if(set.contains(num)){
+                return num;
+            }
+            set.add(num);
+        }
+        return -1;
+    }
+}
+```
+
+
+
+对原数组进行修改
+
+``` Java
+class Solution {
+    public int findRepeatNumber(int[] nums) {
+
+        if(nums == null){
+            return -1;
+        }
+
+        int j;
+        int temp;
+        for(int i=0;i<nums.length;i++){
+            j=nums[i];
+            if(i==j){
+                continue;
+            }else if(j == nums[j]){
+                return j;
+            }else{
+                temp = nums[i];
+                nums[i] = nums[j];
+                nums[j] = temp; 
+            }
+        }
+        return -1;
+    }
+}
+```
+
