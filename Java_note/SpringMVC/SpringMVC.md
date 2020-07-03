@@ -904,5 +904,429 @@ public class HelloController implements Controller {
 
 ## 4.2 数据处理
 
+### 4.2.1 处理提交数据
+
+1. 前端提交的属性名和处理方法的参数名一致
+
+   * 访问 URL `http://localhost:8080/user/t1?name=jay`，其中提交的属性为 `name`，提交值为 `jay`；
+
+   * 处理方法中的参数名也为 `name`：
+
+     ```Java
+     @Controller
+     @RequestMapping("/user")
+     public class UserController {
+         // locahost:8080/usr/t1?name=xxx
+         @GetMapping("/t1")
+         public String test1(String name, Model model) {
+             // get front-end request parameter
+             System.out.println("get request parameter: "+name);
+             // return result to front-end
+             model.addAttribute("msg", name);
+             // view jump
+             return "test";
+         }
+     }
+     ```
+
+   * 访问结果：
+
+     ![image-20200703092159158](SpringMVC.assets/image-20200703092159158.png)
+
+2. 提交的属性名和处理方法的参数名不一致
+
+   * 访问 URL `http://localhost:8080/user/t1?username=jay`，其中提交的属性为 `username`，提交值为 `jay`；
+
+   * 处理方法中的参数名为 `name`，但添加了一个注解 `@RequestParam("username")`，Spring MVC 会使用注解中的值匹配前端提交的属性；
+
+     ```Java
+     @Controller
+     @RequestMapping("/user")
+     public class UserController {
+         // locahost:8080/usr/t1?name=xxx
+         @GetMapping("/t1")
+         public String test1(@RequestParam("username") String name, Model model) {
+             // get front-end request parameter
+             System.out.println("get request parameter: "+name);
+             // return result to front-end
+             model.addAttribute("msg", name);
+             // view jump
+             return "test";
+         }
+     }
+     
+     ```
+
+   * 访问结果：
+
+     ![image-20200703092809132](SpringMVC.assets/image-20200703092809132.png)
+
+3. 提交的是一个对象：
+
+   要求提交的表单属性和对象的属性名一致，参数使用对象即可：
+
+   * 实体类：
+
+     ```Java
+     public class User {
+         private int id;
+         private String name;
+         private int age;
+     
+         // constructors
+         // getters, setters
+         // toString
+     }
+     ```
+
+   * 提交 URL：`http://localhost:8080/user/user?name=jay&id=1&age=26`；
+
+   * 处理方法：
+
+     ```Java
+     @RequestMapping("/user")
+     public String user(User user, Model model) {
+         System.out.println(user);
+         model.addAttribute("msg", user);
+     
+         return "hello";
+     }
+     ```
+
+   * 访问结果：
+
+     ![image-20200703094015047](SpringMVC.assets/image-20200703094015047.png)
+
+   * 如果使用对象的话，前端传递的参数名和对象名必须一致，否则传入值为 null。
+
+     ![image-20200703094117131](SpringMVC.assets/image-20200703094117131.png)
+
+### 4.2.2 数据显示到前端
+
+1. 通过 `ModelAndView`：
+
+   ```Java
+   @RequestMapping("/t2")
+   public ModelAndView test2(User user) {
+       System.out.println(user);
+       ModelAndView modelAndView = new ModelAndView();
+       modelAndView.addObject("msg", user);
+       modelAndView.setViewName("hello");
+   
+       return modelAndView;
+   }
+   ```
+
+2. 通过 ModelMap：
+
+   ```Java
+   @RequestMapping("/t3")
+   public String test3(User user, ModelMap model) {
+       System.out.println(user);
+       model.addAttribute("msg", user);
+   
+       return "hello";
+   }
+   ```
+
+3. 通过 Model：
+
+   ```Java
+   @RequestMapping("/t4")
+   public String test3(User user, Model model) {
+       System.out.println(user);
+       model.addAttribute("msg", user);
+   
+       return "hello";
+   }
+   ```
 
 
+
+对比：
+
+1. Model 是一个接口，只定义了几个方法，适合于存储数据；
+2. ModelMap 继承了 LinkedHashMap，除了实现了自身的一些方法，还可以使用继承自父类的方法；
+3. ModelAndView 可以在存储数据的同时，设置视图跳转的目标页面。
+
+
+
+### 4.2.3 三种视图跳转方式的关系
+
+**Model 和 ModelMap 的关系**
+
+从 UML 类图中可以看到 `RedirectAttributesModelMap` 类实现了 `Model` 接口，并且继承了 `ModelMap` 类。
+
+![image-20200703100521873](SpringMVC.assets/image-20200703100521873.png)
+
+以下用常用的 `addAttribute` 方法为例，阐述 `RedirectAttributesModelMap` 子类是怎么关联 `Model` 和 `ModelMap` 的：
+
+1. `addAttribute`  在 `Model` 接口中的定义是：
+
+   ```Java
+   Model addAttribute(String attributeName, @Nullable Object attributeValue);
+   ```
+
+2. `addAttribute` 在 `RedirectAttributesModelMap`  中的实现如下，直接调用了父类 `ModelMap` 的 `addAttribute` 方法：
+
+   ```Java
+   @Override
+   public RedirectAttributesModelMap addAttribute(String attributeName, @Nullable Object attributeValue) {
+       super.addAttribute(attributeName, formatValue(attributeValue));
+       return this;
+   }
+   ```
+
+3. 再来看 `ModelMap` 类中 `addAttribute` 的实现：
+
+   ```Java
+   public ModelMap addAttribute(String attributeName, @Nullable Object attributeValue) {
+       Assert.notNull(attributeName, "Model attribute name must not be null");
+       put(attributeName, attributeValue);
+       return this;
+   }
+   ```
+
+4. 可以看出无论我们在使用 `Model` 还是 `ModelMap` 的方式来传递数据，底层的处理逻辑都在同一个子类（实现类）的方法中完成的。
+
+
+
+**ModelAndView 和 ModelMap 的关系：**
+
+1. ModelAndView 类中包含一个 ModelMap 类型的属性，并且它的 `addObject` 方法也是调用了 `ModelMap` 的 `addAttribute` 方法实现传递数据到前端的 ：
+
+   ```Java
+   public class ModelAndView {
+   
+       /** Model Map. */
+       @Nullable
+       private ModelMap model;
+   
+       public ModelAndView addObject(String attributeName, @Nullable Object attributeValue) {
+           getModelMap().addAttribute(attributeName, attributeValue);
+           return this;
+       }
+   }
+   ```
+
+2. 可以看出 `ModelAndView` 和 `ModelMap` 是组合关系；
+
+
+
+**小结**：如果读者了解设计模式原理的话，可以从上述两种对比找到适配器模式的身影：
+
+	1. `Model` 和 `ModelMap` 使用的是类适配器（继承模式）；
+ 	2. `ModelAndView` 和 `ModelMap` 使用的是对象适配器（组合模式）。
+
+
+
+
+
+# 5. 乱码处理
+
+
+
+测试步骤：
+
+1. 在首页编写一个提交的表单 `form.jsp` ：
+
+   ```xml
+   <form action="/e/t1" method="post">
+       <input type="text" name="name">
+       <input type="submit">
+   </form>
+   ```
+
+2. 编写 `EncodingController` 处理类：
+
+   ```Java
+   @Controller
+   public class EncodingController {
+   
+       @PostMapping("/e/t1")
+       public String test1(String name, Model model) {
+           System.out.println(name);
+           model.addAttribute("msg", name);
+           return "test";
+       }
+   }
+   ```
+
+3. 前端传递中文数据：
+
+   ![image-20200703105707018](SpringMVC.assets/image-20200703105707018.png)
+
+   ![image-20200703105732397](SpringMVC.assets/image-20200703105732397.png)
+
+   
+
+4. 定位乱码问题发生在后端：
+
+   ![image-20200703105456265](SpringMVC.assets/image-20200703105456265.png)
+
+5. 在 `web.xml` 中配置 Spring MVC 的编码过滤器，设置字符编码为 UTF-8 ，解决乱码问题：
+
+   ```XML
+   <filter>
+       <filter-name>encoding</filter-name>
+       <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+       <init-param>
+           <param-name>encoding</param-name>
+           <param-value>utf-8</param-value>
+       </init-param>
+   </filter>
+   
+   <!-- 
+   <url-pattern> 中必须匹配 /*， 如果为 / 过滤不了 jsp页面 
+   -->
+   <filter-mapping>
+       <filter-name>encoding</filter-name>
+       <url-pattern>/*</url-pattern>
+   </filter-mapping>
+   ```
+
+6. 再次传递中文数据，编码问题解决了：
+
+   ![image-20200703110635934](SpringMVC.assets/image-20200703110635934.png)
+
+
+
+
+
+# 6. JSON
+
+## 6.1 什么是 JSON
+
+* JSON(JavaScript Object Notation, JS 对象简谱) 是一种轻量级的数据交换格式；
+* 它基于 ECMAScript (欧洲计算机协会制定的js规范)的一个子集，采用完全独立于编程语言的文本格式来存储和表示数据；
+* 简洁和清晰的层次结构使得 JSON 成为理想的数据交换语言；
+* 易于人阅读和编写，同时也易于机器解析和生成，并有效地提升网络传输效率。
+
+
+
+| 前后端分离的时代： |                                  |
+| ------------------ | -------------------------------- |
+| 后端               | 部署在服务器，提供接口，提供数据 |
+|                    | 使用 JSON 等传输数据             |
+| 前端               | 独立部署，负责渲染后端的数据     |
+
+
+
+JSON 和 JavaScript 对象相互转换:
+
+1. 前端 HTML 中嵌入 JavaScript 语句：
+
+   ```HTML
+   <script type="text/javascript">
+   
+       let user = {
+           name: "Jay",
+           age: 25,
+           sex: "Male"
+       }
+   
+       // convert js object to JSON
+       let json = JSON.stringify(user);
+       console.log(json);
+   
+       console.log("===========================")
+       
+       // convert JSON to js object
+       let obj = JSON.parse(json);
+       console.log(obj);
+   
+   </script>
+   ```
+
+2. 结果显示：
+
+   ![image-20200703112919822](SpringMVC.assets/image-20200703112919822.png)
+
+
+
+
+
+## 6.2 Controller 返回 JSON 数据
+
+Jackson应该是目前比较好的json解析工具。
+
+导入 Jackson 依赖：
+
+```xml
+<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.11.1</version>
+</dependency>
+```
+
+
+
+有两种方式可以让 `@RequestMapping` 的方法返回字符串而不是跳转视图：
+
+1. 在 `Controller` 类上使用 `@Controller` 在方法上使用  `@ResponseBody` 注解；
+
+   ```Java
+   @Controller
+   public class UserController {
+   
+       @RequestMapping("/j1")
+       @ResponseBody
+       public String json1() throws JsonProcessingException {
+   
+           // jackson ObjectMapper
+           ObjectMapper mapper = new ObjectMapper();
+           User user = new User("Jay", 25, "Male");
+           String string = mapper.writeValueAsString(user);
+   
+           return string;
+       }
+   }
+   ```
+
+   ![image-20200703132847226](SpringMVC.assets/image-20200703132847226.png)
+
+2. 直接在 `Controller` 类上 使用 `@RestController` 注解。
+
+   ```Java
+   @RestController
+   public class UserController {
+   
+       @RequestMapping("/j2")
+       public String json2() throws JsonProcessingException {
+           ObjectMapper mapper = new ObjectMapper();
+           User user1 = new User("Jay", 25, "M");
+           User user2 = new User("Lily", 20, "F");
+           User user3 = new User("Bob", 25, "M");
+   
+   
+           ArrayList<User> list = new ArrayList<>();
+           list.add(user1);
+           list.add(user2);
+           list.add(user3);
+   
+           String string = mapper.writeValueAsString(list);
+           return string;
+       }
+   }
+   ```
+
+   ![image-20200703132819038](SpringMVC.assets/image-20200703132819038.png)
+
+
+
+
+
+# 7 总结 Spring MVC 中使用的设计模式
+
+
+
+Controller 中 使用组合模式的适配器模式： `HandlerAdapter`，处理器适配器 ，根据传入的 `handler` 来定位 `Controller`。
+
+
+
+**小结**：如果读者了解设计模式原理的话，可以从上述两种对比找到适配器模式的身影：
+
+ 	1. `Model` 和 `ModelMap` 使用的是类适配器（继承模式）；
+ 	2. `ModelAndView` 和 `ModelMap` 使用的是对象适配器（组合模式）。
