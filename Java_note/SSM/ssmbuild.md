@@ -258,15 +258,15 @@ INSERT INTO `books` (`bookID`, `bookName`, `bookCounts`, `detail`) VALUES
        <delete id="deleteBook">
            delete
            from ssmbuild.books
-           where bookID = #{id}
+           where bookID = #{bookID}
        </delete>
    
        <update id="updateBook" parameterType="books">
            update ssmbuild.books
            set bookName=#{bookName},
                bookCounts=#{bookCounts},
-               detail=${detail}
-           where bookID = #{id};
+               detail=#{detail}
+           where bookID = #{bookID};
        </update>
    
        <select id="queryBookById" resultType="books">
@@ -737,21 +737,128 @@ INSERT INTO `books` (`bookID`, `bookName`, `bookCounts`, `detail`) VALUES
 
 1. 在 `BookController` 类中添加相关方法：
 
+   ```Java
+   @RequestMapping("/toUpdatePage")
+   public String toUpdatePage(int id, Model model) {
+    Books book = bookService.queryBookById(id);
+   
+       model.addAttribute("QBook", book);
+       return "updateBook";
+   }
+   
+   @PostMapping("updateBook")
+   public String updateBook(Books book, Model model) {
+       System.out.println(book);
+       bookService.updateBook(book);
+       Books books = bookService.queryBookById(book.getBookID());
+       model.addAttribute("books", books);
+   
+       return "redirect:/book/allBook";
+   }
    ```
+   
+2. 在 allBook.jsp 展示界面添加修改链接跳转，跳转时附加传递选中书籍的 `bookID` 参数：
+
+   ```JSP
+   <tbody>
+       <c:forEach var="book" items="${list}">
+           <tr>
+               <td>${book.bookID}</td>
+               <td>${book.bookName}</td>
+               <td>${book.bookCounts}</td>
+               <td>${book.detail}</td>
+               <td>
+                   <a href="${pageContext.request.contextPath}/book/toUpdatePage?id=${book.bookID}">modify</a>
+                   &nbsp; | &nbsp;
+                   <a href="#">delete</a>
+               </td>
+           </tr>
+       </c:forEach>
+   </tbody>
+   ```
+
+3. 添加 updateBook.jsp，修改书籍信息后，跳转到 `/book/updateBook` 方法调用 service 层更新数据到数据库中：
+
+   ```JSP
+   <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+   <html>
+   <head>
+       <title>update book</title>
+   
+       <link href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+   
+   </head>
+   <body>
+   
+   <div class="container">
+   
+       <div class="row clearfix">
+           <div class="col-md-12 column">
+               <div class="page-header">
+                   <h1>
+                       <small> modify book </small>
+                   </h1>
+               </div>
+           </div>
+       </div>
+   
+       <form action="${pageContext.request.contextPath}/book/updateBook" method="post">
+           <input type="hidden" name="bookID" value="${QBook.bookID}"/>
+           book name: <input type="text" name="bookName" value="${QBook.bookName}"/>
+           book counts: <input type="text" name="bookCounts" value="${QBook.bookCounts}"/>
+           book detail: <input type="text" name="detail" value="${QBook.detail}"/>
+           <input type="submit" value="submit"/>
+       </form>
+   
+   </div>
+   </body>
+   </html>
    
    ```
 
+
+
+## 6.4 删除书籍方法
+
+1. 在 `BookController` 类中添加相关方法：
+
+   ```Java
+   @RequestMapping("/deleteBook/{bookID}")
+   public String deleteBook(@PathVariable("bookID") int id) {
+       System.out.println("bookID: " + id);
+       bookService.deleteBookById(id);
    
+       return "redirect:/book/allBook";
+   }
+   ```
+
+2. 在 allBook.jsp 展示界面添加删除链接跳转，使用 RESTful 风格传递选中书籍的 `bookID` 参数：
+
+   ```JSP
+   <tbody>
+       <c:forEach var="book" items="${list}">
+           <tr>
+               <td>${book.bookID}</td>
+               <td>${book.bookName}</td>
+               <td>${book.bookCounts}</td>
+               <td>${book.detail}</td>
+               <td>
+                   <a href="${pageContext.request.contextPath}/book/toUpdatePage?id=${book.bookID}">modify</a>
+                   &nbsp; | &nbsp;
+                   <a href="${pageContext.request.contextPath}/book/deleteBook/${book.bookID}">delete</a>
+               </td>
+           </tr>
+       </c:forEach>
+   </tbody>
+   ```
 
 
 
+至此， SSM 项目整个就完成了。
 
+# 7. 排错思路
 
-# 10. 排错思路
-
-问题： Bean 创建失败。
-
-
+**问题： Bean 创建失败。**
 
 步骤：
 
@@ -765,3 +872,63 @@ INSERT INTO `books` (`bookID`, `bookName`, `bookCounts`, `detail`) VALUES
 
 
 
+**问题：update 更新数据库时出错。**
+
+![image-20200706103304322](ssmbuild.assets/image-20200706103304322.png)
+
+更新数据时， book detail 如果是数字或附加引号的字符串，则可以正常更新。
+
+![image-20200706104042221](ssmbuild.assets/image-20200706104042221.png)
+
+更新结果：
+
+![image-20200706104126518](ssmbuild.assets/image-20200706104126518.png)
+
+![image-20200706104250981](ssmbuild.assets/image-20200706104250981.png)
+
+
+
+如果 book detail 的值为字符串且没有使用引号，会报错。
+
+![image-20200706103334457](ssmbuild.assets/image-20200706103334457.png)
+
+![image-20200706103541612](ssmbuild.assets/image-20200706103541612.png)
+
+
+
+```
+org.springframework.web.util.NestedServletException: Request processing failed; nested exception is org.springframework.jdbc.BadSqlGrammarException: 
+### Error updating database.  Cause: java.sql.SQLSyntaxErrorException: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'where bookID = 6' at line 5
+### The error may exist in com/jay/dao/BookMapper.xml
+### The error may involve com.jay.dao.BookMapper.updateBook-Inline
+### The error occurred while setting parameters
+### SQL: update ssmbuild.books         set bookName=?,             bookCounts=?,             detail=C++         where bookID = ?;
+### Cause: java.sql.SQLSyntaxErrorException: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'where bookID = 6' at line 5
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'where bookID = 6' at line 5
+	org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:909)
+	javax.servlet.http.HttpServlet.service(HttpServlet.java:660)
+	org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883)
+	javax.servlet.http.HttpServlet.service(HttpServlet.java:741)
+	org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+	org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:119)
+
+```
+
+
+
+定位问题所在：
+
+![image-20200706103451525](ssmbuild.assets/image-20200706103451525.png)
+
+
+
+detail 中 使用 占位符 `${detail}` 即可解决这个问题。
+
+
+
+拓展：
+
+* `${}` 是 Properties 文件中的变量占位符，可以用于标签属性值和 SQL 语句内部，属于静态文本替换，此处的 `${detail}` 会被直接替换成 `C++`，由于 `C++` 没有被识别成字符串，所以 SQL 语句会报错。如果此处输入的值为 数字 `1` 或使用引号的字符串 `"C++"`，符合 SQL 语法要求，数据被正常更新。
+* `#{}` 是 SQL 的参数占位符，MyBatis 会将 SQL 中的 `#{}` 替换为 `?`，在执行 SQL 前会使用 PreparedStatement 的方式预处理 SQL 语句，并使用反射按序给 `?` 占位符处设置参数。此处的 #{bookName} 的属性值相当于 `getBookName()` 方法的返回值。
