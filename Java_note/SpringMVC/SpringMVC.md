@@ -1316,9 +1316,23 @@ Jackson应该是目前比较好的json解析工具。
 
 
 
+# 7. Ajax
+
+Ajax 即“ Asynchronous Javascript And XML”（异步 JavaScript 和 XML）
+
+* 是指一种创建交互式、快速动态网页应用的网页开发技术；
+* 无需重新加载整个网页的情况下，能够更新部分网页的技术；
+* 通过在后台与服务器进行少量数据交换，Ajax 可以使网页实现异步更新；
 
 
-# 7 总结 Spring MVC 中使用的设计模式
+
+## 7.1 
+
+
+
+
+
+# 9 总结 Spring MVC 中使用的设计模式
 
 
 
