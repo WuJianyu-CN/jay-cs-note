@@ -535,7 +535,7 @@ root
 
 根据二叉树遍历的原理可知，前序遍历的输出的值都是作为当前传入子树的 `root` 节点输出的。
 
-扫描前序序列，从前序序列中获取某个结点 `node` ，可以将当前的中序序列划分为左右两个中序子序列：
+从前序序列中获取首个结点 `node` ，易知，当前结点为二叉树的 `root` 结点可以将当前的中序序列划分为左右两个中序子序列：
 
 *  `node` 结点的左侧结点均在 `node` 的左子树：
   * 如果左侧中序子序列为空，则 `node` 结点的左孩子为空；
@@ -545,13 +545,260 @@ root
   * 如果右侧子序列为空，则 `node` 结点的右孩子为空；
   * 如果右侧中序子序列非空，则其中在前序序列中最先出现的结点 `rightNode` 即为这个子序列的 `root`，也就是 `node` 结点的右孩子；
 
+#### 方法一
 
+**算法流程：**
+
+取前序序列第一个值，获取根结点的值，找到根结点在中序序列中的索引 `index`，通过 `index` 计算，根结点左右子树结点的个数：`leftNodeNum` 和 `rightNodeNum`。进而可以分别得到左右子树的前序和中序序列。分别递归求解左右子树即可。递归问题求解的关键在于确定 base case。此问题的 base case 为**当队列的前序或中序序列的长度为 0 时，表示当前子树为空，返回空结点 `null`。**
+
+此题的易错点在于计算左右子树时的前序和中序的边界，因此此处先计算了左右子树的结点个数来辅助计算边界。
 
 
 
 示例代码：
 
 ```Java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        if(preorder==null || preorder.length == 0 
+           || inorder == null || inorder.length == 0){
+            return null;
+        }
+        return constructCore(0, preorder.length-1, preorder, 0, inorder.length-1, inorder);
+    }
+
+    public TreeNode constructCore(int preStart, int preEnd, int[] preorder,
+                                  int inStart, int inEnd, int[] inorder)
+    {
+        // base case
+        if(preStart > preEnd){
+            return null;
+        }
+
+        // 当前树的根结点值
+        int rootValue = preorder[preStart];
+        TreeNode root = new TreeNode(rootValue);
+
+        // 找到根结点在中序遍历中的索引
+        int index = findIndex(rootValue, inorder);
+
+        // 左子树的结点个数
+        int leftNodeNum = index - inStart;
+        // 右子树的结点个数
+        int rightNodeNum = inEnd - index;
+
+        // 构建左子树
+        root.left = constructCore(preStart + 1, preStart + leftNodeNum, preorder, inStart, inStart + leftNodeNum - 1, inorder);
+        // 构建右子树
+        root.right = constructCore(preEnd - rightNodeNum + 1, preEnd, preorder, inEnd - rightNodeNum + 1, inEnd, inorder);    
+
+        return root;
+    }
+
+    public int findIndex(int val, int[] order) {
+        for (int i = 0; i < order.length; i++) {
+            if (val == order[i]) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+}
+```
+
+
+
+执行结果：
+
+![image-20200707112909553](leetcode.assets/image-20200707112909553.png)
+
+
+
+| 时间复杂度 | O(n^2) |
+| ---------- | ------ |
+| 空间复杂度 | O(1)   |
+
+
+
+#### 解法优化
+
+上述解法虽然执行通过，但耗时较高。每次找 root 在中序序列中的索引时，都会调用 `findIndex` 方法，遍历中序序列，此方法查询索引平均时间复杂度为 `O(0)`。
+
+可以引入一个 `HashMap` 在初始状况下保存中序序列中的索引与值的关系。这样之后每次查询 root 的索引的时间复杂度均为 `O(1)`。
+
+示例代码
+
+```Java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public Map<Integer, Integer> indexMap = new HashMap<>();
+
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        if (preorder == null || preorder.length == 0
+            || inorder == null || inorder.length == 0) {
+            return null;
+        }
+        for (int i = 0; i < inorder.length; i++) {
+            indexMap.put(inorder[i], i);
+        }
+
+        return constructCore(0, preorder.length - 1, preorder, 0, inorder.length - 1, inorder);
+    }
+
+    public TreeNode constructCore(int preStart, int preEnd, int[] preorder,
+                                  int inStart, int inEnd, int[] inorder) {
+        // base case
+        if (preStart > preEnd) {
+            return null;
+        }
+
+        // 当前树的根结点值
+        int rootValue = preorder[preStart];
+        TreeNode root = new TreeNode(rootValue);
+
+        // 找到根结点在中序遍历中的索引
+        int index = indexMap.get(rootValue);
+
+        // 左子树的结点个数
+        int leftNodeNum = index - inStart;
+        // 右子树的结点个数
+        int rightNodeNum = inEnd - index;
+
+        // 构建左子树
+        root.left = constructCore(preStart + 1, preStart + leftNodeNum, preorder, inStart, inStart + leftNodeNum - 1, inorder);
+        // 构建右子树
+        root.right = constructCore(preEnd - rightNodeNum + 1, preEnd, preorder, inEnd - rightNodeNum + 1, inEnd, inorder);
+
+        return root;
+    }
+
+}
+```
+
+执行结果：
+
+![image-20200707114516076](leetcode.assets/image-20200707114516076.png)
+
+
+
+| 时间复杂度 | O(n) |
+| ---------- | ---- |
+| 空间复杂度 | O(n) |
+
+
+
+## # 09 用两个栈实现队列
+
+### 题目描述
+
+```
+用两个栈实现一个队列。队列的声明如下，请实现它的两个函数 appendTail 和 deleteHead ，分别完成在队列尾部插入整数和在队列头部删除整数的功能。(若队列中没有元素，deleteHead 操作返回 -1 )
+
+示例 1：
+输入：
+["CQueue","appendTail","deleteHead","deleteHead"]
+[[],[3],[],[]]
+输出：[null,null,3,-1]
+
+示例 2：
+输入：
+["CQueue","deleteHead","appendTail","appendTail","deleteHead","deleteHead"]
+[[],[],[5],[2],[],[]]
+输出：[null,-1,null,null,5,2]
+
+提示：
+1 <= values <= 10000
+最多会对 appendTail、deleteHead 进行 10000 次调用
 
 ```
 
+
+
+### 解题思路
+
+前置知识：
+
+| 数据结构 | 属性             |
+| -------- | ---------------- |
+| 队列     | 先进先出（FIFO） |
+| 栈       | 先进后出（FILO） |
+
+解此题前需要了解队列和栈的属性，用两个栈来模拟队列先进先出的特性。
+
+
+
+算法流程：
+
+使用一个栈 `inputStack` 来接收元素，另一个栈 `outputStack` 来提供元素。
+
+* 初始化：  
+
+* 接收元素：直接将元素压栈到 `inputStack` 中；
+* 提供元素：先判断 `outputStack` 是否为空：
+  * 若为空，将 `inputStack` 中所有的元素依次弹出，并压栈入 `outputStack` 中。清空 `inputStack` 后，弹出 `ouputStack` 栈顶元素。即为所求；
+  * 若非空， 直接弹出 `outputStack` 栈顶元素；
+
+**注意**：Java 中虽然有 `Stack` 类，但并不推荐使用。应当使用 `Deque` 来实现栈的功能。`LinkedList`  和 `ArrayDueue` 类均实现了 `Deque` 接口，但实验比较发现，使用 `LinkedList` 实现的效率更高，故实例中使用 `LinkedList` 实现栈功能。
+
+示例代码
+
+```Java
+class CQueue {    
+    Deque<Integer> inputStack;
+    Deque<Integer> outputStack;
+
+    public CQueue() {
+        inputStack = new LinkedList<>();
+        outputStack = new LinkedList<>();
+    }
+
+    public void appendTail(int value) {
+        inputStack.push(value);
+    }
+
+    public int deleteHead() {
+        if(outputStack.isEmpty()){                      
+            if(inputStack.isEmpty()){
+                return -1;
+            }
+            while(!inputStack.isEmpty()){
+                outputStack.push(inputStack.pop());
+            } 
+        }
+        return outputStack.pop();
+    }
+}
+
+/**
+ * Your CQueue object will be instantiated and called as such:
+ * CQueue obj = new CQueue();
+ * obj.appendTail(value);
+ * int param_2 = obj.deleteHead();
+ */
+```
+
+执行结果：
+
+![image-20200707130522296](leetcode.assets/image-20200707130522296.png)
+
+
+
+## # 10 斐波那契数列
