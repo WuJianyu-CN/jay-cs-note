@@ -28,7 +28,55 @@
 
 
 
-# 2. 剑指 Offer
+# 2. 算法基础
+
+## 2.1 算法复杂度速查表
+
+> [常用算法复杂度速查表][https://mp.weixin.qq.com/s?__biz=MzU4ODI1MjA3NQ==&mid=2247488143&idx=1&sn=deb6c615caf298ed998e5fbf6a741540&chksm=fddec44bcaa94d5d7118f20ead2b13575c909c70e823f63145e972941da270f5f52aae95411f&mpshare=1&scene=23&srcid=0707lCkUxpO9dVnjfMOfDuMy&sharer_sharetime=1594109671836&sharer_shareid=c7673b6ffac883d6f97d3c27bcb3fc32#rd]
+
+
+
+**抽象数据结构复杂度**
+
+![01](leetcode.assets/01.png)
+
+**排序算法**
+
+![02](leetcode.assets/02.png)
+
+
+
+**图操作**
+
+![03](leetcode.assets/03.png)
+
+
+
+**堆操作**
+
+![04](leetcode.assets/04.png)
+
+
+
+**大O复杂度曲线**
+
+![03](leetcode.assets/05.png)
+
+
+
+
+
+## 2.2 排序
+
+### 2.2.1 插入排序
+
+
+
+
+
+
+
+# 3. 剑指 Offer
 
 ## # 03 数组中重复的数字
 
@@ -1043,3 +1091,129 @@ class Solution {
 
 
 ### 解题思路
+
+> 如果面试题是在要求在排序的数组（或者部分排序的数组）中查找一个数字或者统计某个数字出现的次数，那么我们都可以尝试用二分查找算法。
+
+
+
+#### 暴力求解法
+
+记录数组首个元素的值 `temp`。因为原数组是底层数组，遍历旋转数组 `numbers[]` 时，如果出现某个元素小于 `temp`，表明此元素是原数组的首个元素，也就是最小值。
+
+这种方法的时间复杂度为 O(n)，
+
+代码示例：
+
+```Java
+class Solution {
+    public int minArray(int[] numbers) {
+        int min = numbers[0];
+        for(int i = 1; i < numbers.length; i++){
+            if(numbers[i] < min){
+                return numbers[i];
+            }
+        }
+        return min;
+    }
+}
+```
+
+执行结果：
+
+![image-20200707170156756](leetcode.assets/image-20200707170156756.png)
+
+
+
+#### 二分法
+
+* 如下图所示，可将旋转数组分为两个有序子数组，其中**左排序数组**中任一元素的值大于或等于**右排序数组**中的任一元素；
+* 左排序数组可为空，此时原数组是有序数组，旋转点值为首个元素的值。
+
+![image-20200707221805091](leetcode.assets/image-20200707221805091.png)
+
+算法流程：
+
+1. 循环二分：设置两个索引 `start`， `end` 分别指向数组的头和尾。中间的元素索引为 `middle = (end - start) / 2` 向下取整。因此恒有：`start <= middle < end`；
+   1. 如果 `numbers[middle] > numbers[end]`：则此时的 `middle` 一定位于左排序数组，而旋转点在 `middle` 和 `end` 之间，更新 `start = middle + 1`；
+   2. 如果 `numbers[middle] < numbers[end]`：则此时的 `middle` 一定位于右排序数组，而旋转点在 `start` 和 `midlle` 之间，更新 `end = middle`；
+   3. 如果 `numbers[middle] == numbers[end]`：此时无法判断此时旋转点的位置，后续单独分析：
+      * 考虑数组 [1, 1, 1, 1, 1]，此时 `start = 0`，`end = 4`，`middle = 2`，有 `numbers[middle] == numbers[end]` ，此时的旋转点索引为 0，在 `start` 与 `middle` 之间；
+      * 考虑数组[1, 1, 1, 0, 1]，此时 `start = 0`，`end = 4`，`middle = 2`，有 `numbers[middle] == numbers[end]` ，此时的旋转点索引为 3，在 `middle` 与 `end` 之间；
+2. 当 `start == end` 时，当前子排序数组中只有一个元素，此元素即为所求值。
+
+
+
+再次考虑 `numbers[middle] == numbers[end]` 时的处理，根据左排序数组的任一元素的值都会大于右排序数组的任一元素这一性质，更新 `end = end - 1`。考虑出现以下几种情况：
+
+1. `middle` 索引位置不变，`end` 索引处的数组元素值不变，继续循环；
+2. `middle` 索引位置不变，`end` 索引处的数组元素值减小，此时有 `numbers[middle] > numbers[end]`，进入到1.1 分支处理；
+3. `middle` 索引位置减 1 且该处的数组元素值不变，`end` 索引处的数组元素值不变，继续循环；
+4. `middle` 索引位置减 1 且该处的数组元素值减小，`end` 索引处的数组元素值不变，此时有 `numbers[middle] < numbers[end]`，进入 1.2 分支处理；
+5. `middle` 索引位置减 1 且该处的数组元素值减小，`end` 索引处的数组元素值减小，虽然我们不确定此时的 `numbers[middle]` 和 `numbers[end]` 的大小，但无论是那种关系，都可以在下次循环中被处理。
+
+
+
+代码示例：
+
+```Java
+class Solution {
+    public int minArray(int[] numbers) {
+        int start = 0;
+        int end = numbers.length-1;
+        int middle;
+        
+        while(start != end){
+            middle = (start + end) / 2;
+            if(numbers[middle] > numbers[end]){
+                // middle 位于左排序数组
+                start = middle + 1;
+            }else if(numbers[middle] < numbers[end]){
+                end = middle;
+                // middle 位于右排序数组
+            }else{
+                // 后退 end
+                end--;
+            }
+        }
+        return numbers[start];
+    }
+}
+```
+
+执行结果：
+
+![image-20200707234035189](leetcode.assets/image-20200707234035189.png)
+
+二分法平均的时间复杂度为：**O(logn)**，极端情况下入 `numbers={1, 1, 1, 1, 1}` 时 end 索引持续自减 1，退化为遍历数组操作，时间复杂度为 **O(n)**。
+
+
+
+## # 12 矩阵中的路径
+
+### 问题描述
+
+```
+请设计一个函数，用来判断在一个矩阵中是否存在一条包含某字符串所有字符的路径。路径可以从矩阵中的任意一格开始，每一步可以在矩阵中向左、右、上、下移动一格。如果一条路径经过了矩阵的某一格，那么该路径不能再次进入该格子。例如，在下面的3×4的矩阵中包含一条字符串“bfce”的路径（路径中的字母用加粗标出）。
+
+[["a","b","c","e"],
+["s","f","c","s"],
+["a","d","e","e"]]
+
+但矩阵中不包含字符串“abfb”的路径，因为字符串的第一个字符b占据了矩阵中的第一行第二个格子之后，路径不能再次进入这个格子。
+
+示例 1：
+输入：board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED"
+输出：true
+
+示例 2：
+输入：board = [["a","b"],["c","d"]], word = "abcd"
+输出：false
+
+提示：
+1 <= board.length <= 200
+1 <= board[i].length <= 200
+
+```
+
+### 解题思路
+
