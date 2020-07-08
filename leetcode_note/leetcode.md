@@ -1196,8 +1196,8 @@ class Solution {
 请设计一个函数，用来判断在一个矩阵中是否存在一条包含某字符串所有字符的路径。路径可以从矩阵中的任意一格开始，每一步可以在矩阵中向左、右、上、下移动一格。如果一条路径经过了矩阵的某一格，那么该路径不能再次进入该格子。例如，在下面的3×4的矩阵中包含一条字符串“bfce”的路径（路径中的字母用加粗标出）。
 
 [["a","b","c","e"],
-["s","f","c","s"],
-["a","d","e","e"]]
+ ["s","f","c","s"],
+ ["a","d","e","e"]]
 
 但矩阵中不包含字符串“abfb”的路径，因为字符串的第一个字符b占据了矩阵中的第一行第二个格子之后，路径不能再次进入这个格子。
 
@@ -1214,6 +1214,202 @@ class Solution {
 1 <= board[i].length <= 200
 
 ```
+
+### 解题思路
+
+> 回溯法：从解决问题每一步的所有可能选项里系统地选择处一个可行的解决方案。用回溯法解决的问题的所有选项都可以形象地用树结构表示。
+>
+> 在某一步有 n 个可能的选项，那么该步骤可以堪称时树状结构的一个结点，每个选项看成树中结点连接线，经过这些连接线到达该结点地 n 个子节点。树的叶结点对应着终结状态。
+>
+> 如果在叶结点的状态满足题目的约束条件，那么我们找到了一个可行的解决方案。
+>
+> 如果在叶结点的状态不满足约束条件，就回溯到它的父节点，如果父节点所有的选项都已经试过，并且无法满足约束条件，就继续回溯到它的父节点，重复以上操作，如果所有结点的所有选项都不满足约束条件，则该问题无解。
+
+
+
+#### DFS 深度优先搜索
+
+> 本问题是典型的矩阵搜索问题，可使用 **深度优先搜索（DFS）+ 剪枝** 解决。
+
+**算法流程：**
+
+* **深度优先搜索**：通过递归先朝着一个设定的方向一直搜索。再回溯到上一个结点，换一个方向继续搜索，知道访问完所有的元素，这是一种暴力的搜索方式，搜索过程中会遍历搜索的元素。
+* **剪枝**：深度优先搜索的遍历方式会重复搜索同一元素，或者在某个路径不符合约束要求时仍会继续搜索。因此添加搜索约束，进行可行性剪枝，满足以下条件时，直接返回 false，不再从此路径继续搜索：
+  * 访问的索引超出边界；
+  * 当前搜索的元素值和目标字符不同；
+  * 当前元素之前已访问；（题目要求：如果一条路径经过了矩阵的某一格，那么该路径不能再次进入该格子。）
+
+
+
+**复杂度分析：**
+
+令 N，M 为矩阵行列数，K 为目标字符串长度
+
+* **时间复杂度 O(3*K* * NM)**：除了第一个被访问的元素外，对于其它被访问的元素，我们都会从上下左右 4 个方向继续深度优先搜索，可以确定的是至少有一个方向会被剪枝（来的方向的元素一定为已访问元素），因此每次遍历的时间复杂度为  **O(3*K*)**。遍历总次数为 NM，因此时间复杂度为： **O(3*K* * NM)**；
+
+* **空间复杂度 O(NM)**：
+   * 深度优先搜索，使用系统栈调用方法，每次遍历需要栈深度为 K，时间负遍历结束方法后，栈空间会释放。最差的情况下一次遍历会扫描矩阵所有元素 K = NM，总空间复杂度为 **O(NM)**。
+   * 引入额外的数组空间复杂度为 **O(NM)**。
+
+
+
+示例代码：
+
+```java
+class Solution {
+    public boolean exist(char[][] board, String word) {
+        
+        if(board == null || board[0] == null || 
+           board.length == 0 || board[0].length == 0 ||
+           Objects.equals(word,"")){
+            return false;
+        }
+        
+        boolean[][] isVisited = new boolean[board.length][board[0].length];
+                
+        
+        char[] words = word.toCharArray();
+        
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                if (dfs(isVisited, board, words, i, j, 0)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean dfs(boolean[][] isVisited, char[][] board, char[] words, int i, int j, int k) {
+        if (i < 0 || i >= board.length || j < 0 || j >= board[0].length || 
+            isVisited[i][j] || board[i][j] != words[k]) {
+            return false;
+        }
+
+        if (k == words.length - 1) {
+            return true;
+        }
+
+        // 此位置已被访问
+        isVisited[i][j] = true;
+
+        boolean res = dfs(isVisited, board, words, i + 1, j, k + 1) ||
+                dfs(isVisited, board, words, i - 1, j, k + 1) ||
+                dfs(isVisited, board, words, i, j + 1, k + 1) ||
+                dfs(isVisited, board, words, i, j - 1, k + 1);
+
+        // 回溯后，取消访问标识
+        isVisted[i][j] = false;
+        return res;
+    }
+}
+```
+
+执行结果：
+
+![image-20200708152028011](leetcode.assets/image-20200708152028011.png)
+
+
+
+#### DFS 深度优先搜索剪枝优化
+
+上述流程中的可行性剪枝中添加为了标志矩阵中元素是否被访问，借助了一个和矩阵大小相同的 `boolean` 数组，为了不引入额外的空间，可以将被访问过的元素，设置为一个与当前矩阵所有值都不同的特殊值 '#'。这样就将剪枝条件**当前元素之前已访问**，合并入**当前搜索的元素值和目标字符不同**中。
+
+
+
+**复杂度分析：**
+
+令 N，M 为矩阵行列数，K 为目标字符串长度
+
+* **时间复杂度 O(3*K* * NM)**：除了第一个被访问的元素外，对于其它被访问的元素，我们都会从上下左右 4 个方向继续深度优先搜索，可以确定的是至少有一个方向会被剪枝（来的方向的元素一定为已访问元素），因此每次遍历的时间复杂度为  **O(3*K*)**。遍历总次数为 NM，因此时间复杂度为： **O(3*K* * NM)**；
+
+* **空间复杂度 O(K)**：深度优先搜索，使用系统栈调用方法，每次遍历需要栈深度为 K，时间负遍历结束方法后，栈空间会释放。最差的情况下一次遍历会扫描矩阵所有元素 K = NM，总空间复杂度为 **O(NM)**。
+
+
+
+示例代码：
+
+```Java
+class Solution02 {
+    public boolean exist(char[][] board, String word) {
+        // 边界判断
+        if(board == null || board[0] == null || 
+           board.length == 0 || board[0].length == 0 ||
+           Objects.equals(word,"")){
+            return false;
+        }
+        char[] words = word.toCharArray();
+
+        // 遍历矩阵
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                // 找到匹配的路径后，直接返回
+                if (dfs(board, words, i, j, 0)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean dfs(char[][] board, char[] words, int i, int j, int k) {
+        // 剪枝操作，当 dfs 搜索时出现索引越界或当前索引处的矩阵值与目标字符不同
+        // 说明此路径不通，没有必要继续搜索
+        if (i < 0 || i >= board.length || j < 0 || j >= board[0].length || 
+            board[i][j] != words[k]) {
+
+            return false;
+        }
+
+        if (k == words.length - 1) {
+            return true;
+        }
+        // 保存当前字符
+        char temp = board[i][j];
+        // 用 * 标记，此位置已被访问
+        board[i][j] = '#';
+
+        boolean res = dfs(board, words, i + 1, j, k + 1) ||
+            dfs(board, words, i - 1, j, k + 1) ||
+            dfs(board, words, i, j + 1, k + 1) ||
+            dfs(board, words, i, j - 1, k + 1);
+
+        // 获得下层 dfs 访问结果，回溯时恢复原矩阵值
+        board[i][j] = temp;
+        return res;
+    }
+}
+```
+
+执行结果：
+
+![image-20200708145919856](leetcode.assets/image-20200708145919856.png)
+
+
+
+## # 13 机器人的运动范围
+
+### 问题描述
+
+```
+地上有一个m行n列的方格，从坐标 [0,0] 到坐标 [m-1,n-1] 。一个机器人从坐标 [0, 0] 的格子开始移动，它每次可以向左、右、上、下移动一格（不能移动到方格外），也不能进入行坐标和列坐标的数位之和大于k的格子。例如，当k为18时，机器人能够进入方格 [35, 37] ，因为3+5+3+7=18。但它不能进入方格 [35, 38]，因为3+5+3+8=19。请问该机器人能够到达多少个格子？
+
+示例 1：
+输入：m = 2, n = 3, k = 1
+输出：3
+
+示例 2：
+输入：m = 3, n = 1, k = 0
+输出：1
+
+提示：
+1 <= n,m <= 100
+0 <= k <= 20
+
+```
+
+
 
 ### 解题思路
 
