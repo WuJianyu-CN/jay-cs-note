@@ -417,7 +417,7 @@ class Solution {
 ### 问题描述
 
 ```
-输入一个链表的头节点，从尾到头反过来返回每个节点的值（用数组返回）。
+输入一个链表的头结点，从尾到头反过来返回每个结点的值（用数组返回）。
 
 示例 1：
 输入：head = [1,3,2]
@@ -596,7 +596,7 @@ class Solution {
    15   7
  
 限制：
-0 <= 节点个数 <= 5000
+0 <= 结点个数 <= 5000
 ```
 
 
@@ -632,7 +632,7 @@ root
 > 前序遍历 preorder = [3,9,20,15,7]
 > 中序遍历 inorder = [9,3,15,20,7]
 
-根据二叉树遍历的原理可知，前序遍历的输出的值都是作为当前传入子树的 `root` 节点输出的。
+根据二叉树遍历的原理可知，前序遍历的输出的值都是作为当前传入子树的 `root` 结点输出的。
 
 从前序序列中获取首个结点 `node` ，易知，当前结点为二叉树的 `root` 结点可以将当前的中序序列划分为左右两个中序子序列：
 
@@ -1272,11 +1272,11 @@ class Solution {
 
 > 回溯法：从解决问题每一步的所有可能选项里系统地选择处一个可行的解决方案。用回溯法解决的问题的所有选项都可以形象地用树结构表示。
 >
-> 在某一步有 n 个可能的选项，那么该步骤可以堪称时树状结构的一个结点，每个选项看成树中结点连接线，经过这些连接线到达该结点地 n 个子节点。树的叶结点对应着终结状态。
+> 在某一步有 n 个可能的选项，那么该步骤可以堪称时树状结构的一个结点，每个选项看成树中结点连接线，经过这些连接线到达该结点地 n 个子结点。树的叶结点对应着终结状态。
 >
 > 如果在叶结点的状态满足题目的约束条件，那么我们找到了一个可行的解决方案。
 >
-> 如果在叶结点的状态不满足约束条件，就回溯到它的父节点，如果父节点所有的选项都已经试过，并且无法满足约束条件，就继续回溯到它的父节点，重复以上操作，如果所有结点的所有选项都不满足约束条件，则该问题无解。
+> 如果在叶结点的状态不满足约束条件，就回溯到它的父结点，如果父结点所有的选项都已经试过，并且无法满足约束条件，就继续回溯到它的父结点，重复以上操作，如果所有结点的所有选项都不满足约束条件，则该问题无解。
 
 
 
@@ -2051,3 +2051,725 @@ public class Solution {
 
 
 
+## # 16 数值的整数次方
+
+### 问题描述
+
+```
+实现函数double Power(double base, int exponent)，求base的exponent次方。不得使用库函数，同时不需要考虑大数问题。
+
+示例 1:
+输入: 2.00000, 10
+输出: 1024.00000
+
+示例 2:
+输入: 2.10000, 3
+输出: 9.26100
+
+示例 3:
+输入: 2.00000, -2
+输出: 0.25000
+解释: 2-2 = 1/22 = 1/4 = 0.25
+ 
+说明:
+
+-100.0 < x < 100.0
+n 是 32 位有符号整数，其数值范围是 [−231, 231 − 1] 。
+
+```
+
+
+
+### 解题思路
+
+
+
+根据整数次方的定义，我们不难想到以下最朴素的求整数次方的方法：
+
+```Java
+public double myPower(double base, int exponent) {
+    double result = 1.0;
+    for (int i = 1; i <= exponent; i++) {
+        result *= base;
+    }
+    return result;
+}
+```
+
+这种方法当在一般场景看似有效，但当 exponent 指数的值很大时，循环次数过多，程序效率很底。当 exponent 为 0或负数时甚至会出现死循环。需要将其改进。
+
+
+
+先考虑求数值 x 的整数 e 次方：$x^{e}$ 时，变量 x 和 e 取值的不同组合：
+
+| x\e  |          正数           |     0      |                 负数                 |
+| :--: | :---------------------: | :--------: | :----------------------------------: |
+| 正数 |         $x^{e}$         |     1      |         $\frac{1}{ x^{|e|}}$         |
+|  0   |            0            | Error 或 1 |                  0                   |
+| 负数 |  $x^{e}$ (e 能整除 2)   |     1      |  $\frac{1}{ x^{|e|}}$ (e 能整除 2)   |
+| 负数 | $-x^{e}$ (e 不能整除 2) |     1      | $-\frac{1}{ x^{|e|}}$ (e 不能整除 2) |
+
+![image-20200710093733343](leetcode.assets/image-20200710093733343.png)
+
+
+
+根据上表可以将 x 和 e 不大于 0 时的取值用大于 0 的取值转换。 
+
+使用快速幂的方式求解，使用移位法减少循环次数：
+
+```Java
+public double powerWithUnsignedExponent(double base, int absExponent) {
+    if (absExponent == 0) {
+        return 1;
+    }
+    if (absExponent == 1) {
+        return base;
+    }
+    double result = powerWithUnsignedExponent(base, absExponent >>> 1);
+    result *= result;
+
+    if ((absExponent & 0x1) != 0) {
+        result *= base;
+    }
+    return result;
+}
+```
+
+
+
+double 类型的数字大小相比较不能直接用 ==，而应该使用 `BigDecimal` 封装类。
+
+示例代码：
+
+```Java
+class Solution {
+    public double myPow(double x, int n) {
+        if (n == 0) {
+            return 1;
+        }
+        if (x == 0) {
+            return 0;
+        }
+        BigDecimal data = new BigDecimal(x);
+        int res = data.compareTo(BigDecimal.ZERO);
+        double unsignedPower = powerWithUnsignedExponent(Math.abs(x), Math.abs(n));
+        double result = 0.0;
+        // 先比较指数
+        if (n > 0) {
+
+            if (res > 0 || n % 2 == 0) {
+                result = unsignedPower;
+            } else {
+                result = -unsignedPower;
+            }
+        } else {
+            if (res > 0 || n % 2 == 0) {
+                result = 1 / unsignedPower;
+            } else {
+                result = -1 / unsignedPower;
+            }
+        }
+
+        return result;
+    }
+
+    public double powerWithUnsignedExponent(double base, int absExponent) {
+        if (absExponent == 0) {
+            return 1;
+        }
+        if (absExponent == 1) {
+            return base;
+        }
+        double result = powerWithUnsignedExponent(base, absExponent >>> 1);
+        result *= result;
+
+        if ((absExponent & 0x1) != 0) {
+            result *= base;
+        }
+        return result;
+    }
+}
+```
+
+
+
+如果上述代码 LeetCode 不能运行，可以将 `BigDecimal` 相关代码临时修改为直接比较 `double` 类型。
+
+示例代码：
+
+```Java
+class Solution {
+    public double myPow(double x, int n) {
+        if (n == 0) {
+            return 1;
+        }
+        if (x == 0) {
+            return 0;
+        }
+        
+        double unsignedPower = powerWithUnsignedExponent(Math.abs(x), Math.abs(n));
+        double result = 0.0;
+        
+        if (n > 0) {
+            if (x > 0 || n % 2 == 0) {
+                result = unsignedPower;
+            } else {
+                result = -unsignedPower;
+            }
+        } else {
+            if (x > 0 || n % 2 == 0) {
+                result = 1 / unsignedPower;
+            } else {
+                result = -1 / unsignedPower;
+            }
+        }
+
+        return result;
+    }
+
+    public double powerWithUnsignedExponent(double base, int absExponent) {
+        if (absExponent == 0) {
+            return 1;
+        }
+        if (absExponent == 1) {
+            return base;
+        }
+        double result = powerWithUnsignedExponent(base, absExponent >>> 1);
+        result *= result;
+
+        if ((absExponent & 0x1) != 0) {
+            result *= base;
+        }
+        return result;
+    }
+}
+```
+
+执行结果：
+
+![image-20200709231953563](leetcode.assets/image-20200709231953563.png)
+
+
+
+## # 17 打印从 1 到最大的 n 位数
+
+### 问题描述
+
+```
+输入数字 n，按顺序打印出从 1 到最大的 n 位十进制数。比如输入 3，则打印出 1、2、3 一直到最大的 3 位数 999。
+
+示例 1:
+输入: n = 1
+输出: [1,2,3,4,5,6,7,8,9]
+ 
+说明：
+用返回一个整数列表来代替打印
+n 为正整数
+```
+
+
+
+### 解题思路
+
+#### 直接法
+
+示例代码：
+
+```Java
+class Solution {
+    public int[] printNumbers(int n) {
+        int length = (int) Math.pow(10, n) - 1;
+        int[] results = new int[length];
+        int i = 0;
+        while (i < length) {
+            results[i] = i + 1;
+            i++;
+        }
+        return results;
+    }
+}
+```
+
+执行结果：
+
+![image-20200710101008148](leetcode.assets/image-20200710101008148.png)
+
+
+
+#### 大数表示法
+
+本题在原书中考察的是大数表示法，直接法计算时，当 n 大于等于 10 时，int32 类型会产生溢出现象。  
+
+
+
+待续。。。
+
+
+
+## # 18 删除链表的结点
+
+### 问题描述
+
+```
+给定单向链表的头指针和一个要删除的结点的值，定义一个函数删除该结点。
+返回删除后的链表的头结点。
+
+注意：此题对比原题有改动
+
+示例 1:
+输入: head = [4,5,1,9], val = 5
+输出: [4,1,9]
+解释: 给定你链表中值为 5 的第二个结点，那么在调用了你的函数之后，该链表应变为 4 -> 1 -> 9.
+
+示例 2:
+输入: head = [4,5,1,9], val = 1
+输出: [4,5,9]
+解释: 给定你链表中值为 1 的第三个结点，那么在调用了你的函数之后，该链表应变为 4 -> 5 -> 9.
+ 
+说明：
+题目保证链表中结点的值互不相同
+若使用 C 或 C++ 语言，你不需要 free 或 delete 被删除的结点
+
+```
+
+
+
+### 解题思路
+
+#### 遍历 I 双指针遍历
+
+从头结点遍历链表，找到包含目标值的结点 `nodeT` 和它的前序结点 `nodeP`，将 `nodeP` 的后继指向 `nodeT` 的后继结点（可为空），即将 `nodeP` 的 `next` 属性设置为 `nodeT` 的 `next` 属性值。
+
+
+
+**算法流程：**
+
+1. 如果头结点即为包含目标值得结点，直接返回头结点的后继结点；
+2. 遍历链表，设置两个游标结点，`current` 和 `previous` 结点，分别指向当前结点和它的前序结点，遍历条件为 `current != null` ：
+   * 如果 `current` 包含目标值，则 `current` 指向了目标删除结点，将 `previous.next` 指向 `current.next`，再直接返回 `head` 结点即可；
+   * 将 `current` 和 `previous` 依次后移一位；
+3. `current = null`，表明已经遍历所有结点仍未找到目标结点，返回 `null`。
+
+
+
+**复杂度分析：**
+
+记链表长度为 `N`
+
+1. **时间复杂度O(N)**：删除目标结点的平均访问次数为 `N/2`，最差需要遍历所有结点，访问 `N` 次。时间复杂度为 `O(N)`；
+2. **空间复杂度O(1)：**借助了常数个辅助变量 `current` 和 `previous`。
+
+示例代码：
+
+```Java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ * int val;
+ * ListNode next;
+ * ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode deleteNode(ListNode head, int val) {
+        // 如果头结点包含val，直接返回头结点的后继结点
+        if (head.val == val) {
+            return head.next;
+        }
+        ListNode previous = head;
+        ListNode current = head.next;
+        while (current != null) {
+            if (current.val == val) {
+                previous.next = current.next;
+                return head;
+            }
+            previous = current;
+            current = current.next;
+        }
+        return null;
+    }
+}
+```
+
+执行结果：
+
+![image-20200710112805052](leetcode.assets/image-20200710112805052.png)
+
+
+
+#### 遍历 II 单指针遍历
+
+遍历 I 在遍历链表时使用了两个游标结点，再介绍一种只使用一个游标结点的方法。两种方法原理一致，不再赘述。
+
+示例代码
+
+```Java
+class Solution {
+    public ListNode deleteNode(ListNode head, int val) {
+        // 如果头结点包含val，直接返回头结点的后继结点
+        if (head.val == val) {
+            return head.next;
+        }
+        ListNode current = head;
+        while (current.next != null) {
+            if (current.next.val == val) {
+                current.next = current.next.next;
+                return head;
+            }
+            current = current.next;
+        }
+        return null;
+    }
+}
+```
+
+执行结果：
+
+![image-20200710113713022](leetcode.assets/image-20200710113713022.png)
+
+
+
+
+
+## # 19 正则表达式匹配 // TODO
+
+### 问题描述
+
+```
+请实现一个函数用来匹配包含'. '和'*'的正则表达式。模式中的字符'.'表示任意一个字符，而'*'表示它前面的字符可以出现任意次（含0次）。在本题中，匹配是指字符串的所有字符匹配整个模式。例如，字符串"aaa"与模式"a.a"和"ab*ac*a"匹配，但与"aa.a"和"ab*a"均不匹配。
+
+示例 1:
+输入:
+s = "aa"
+p = "a"
+输出: false
+解释: "a" 无法匹配 "aa" 整个字符串。
+
+示例 2:
+输入:
+s = "aa"
+p = "a*"
+输出: true
+解释: 因为 '*' 代表可以匹配零个或多个前面的那一个元素, 在这里前面的元素就是 'a'。因此，字符串 "aa" 可被视为 'a' 重复了一次。
+
+示例 3:
+输入:
+s = "ab"
+p = ".*"
+输出: true
+解释: ".*" 表示可匹配零个或多个（'*'）任意字符（'.'）。
+
+示例 4:
+输入:
+s = "aab"
+p = "c*a*b"
+输出: true
+解释: 因为 '*' 表示零个或多个，这里 'c' 为 0 个, 'a' 被重复一次。因此可以匹配字符串 "aab"。
+
+示例 5:
+输入:
+s = "mississippi"
+p = "mis*is*p*."
+输出: false
+s 可能为空，且只包含从 a-z 的小写字母。
+p 可能为空，且只包含从 a-z 的小写字母以及字符 . 和 *，无连续的 '*'。
+
+```
+
+
+
+### 解题思路
+
+
+
+## # 20 表示数值的字符串 // TODO
+
+### 问题描述
+
+```
+请实现一个函数用来判断字符串是否表示数值（包括整数和小数）。
+例如，字符串"+100"、"5e2"、"-123"、"3.1416"、"0123"都表示数值，但"12e"、"1a3.14"、"1.2.3"、"+-5"、"-1E-16"及"12e+5.4"都不是。
+
+```
+
+
+
+### 解题思路
+
+
+
+
+
+## # 21 调整数组顺序使奇数位于偶数前面
+
+### 问题描述
+
+```
+输入一个整数数组，实现一个函数来调整该数组中数字的顺序，使得所有奇数位于数组的前半部分，所有偶数位于数组的后半部分。
+
+示例：
+输入：nums = [1,2,3,4]
+输出：[1,3,2,4] 
+注：[3,1,2,4] 也是正确的答案之一。
+ 
+提示：
+1 <= nums.length <= 50000
+1 <= nums[i] <= 10000
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 直接法
+
+**算法流程：**
+
+对长度为 `N` 的数组 `nums[]` 使用双层循环：
+
+1. 第一层循环找到数组中的偶数，保存到临时值 `temp` 中；
+2. 第二层讲偶数后的所有数字全部向前移 1 位，再将 `temp` 赋值给 `nums[N-1]`。
+
+
+
+**复杂度分析：**
+
+* **时间复杂度O(N^2)：**使用了两层循环，平均时间复杂度为 O(N^2)；
+* **空间复杂度O(1)：**使用常数个辅助变量。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public int[] exchange(int[] nums) {
+        if (nums == null) {
+            return null;
+        }
+
+        int temp;
+        int n = nums.length;
+        int i = 0;
+        while (n > 0) {
+            if (nums[i] % 2 == 0) {
+                temp = nums[i];
+                for (int j = i + 1; j < nums.length; j++) {
+                    nums[j - 1] = nums[j];
+                }
+                nums[nums.length - 1] = temp;
+            } else {
+                i++;
+            }
+            n--;
+        }
+        return nums;
+    }
+
+}
+```
+
+执行结果：
+
+![image-20200710154031816](leetcode.assets/image-20200710154031816.png)
+
+
+
+#### 辅助数组法
+
+借助长度为 N 的辅助数组 results，数组中奇数在前，偶数在后。
+
+
+
+**算法流程：**
+
+1. 创建一个长度为 `N` 的辅助数组 `results`，设置头部指针 `i` 指向下一个奇数索引，尾部指针 `j` 指向下一个偶数索引，`i` 初值为 `0`，`j` 初值为 `N - 1`
+2. 循环遍历 `nums` 数组，当前值为 `nums[k]`，判断 `nums[k]` 的奇偶：
+   1. 奇数：`results[i] = nums[k]`，`i` 右移 `1` 位；
+   2. 偶数：`results[j] = nums[k]`，`j` 左移 `1` 位；
+3. 返回 `results` 数组。
+
+
+
+**复杂度分析：**
+
+* **时间复杂度O(N)：**使用了一层循环，平均时间复杂度为 O(N)；
+* **空间复杂度O(N)：**使用长度为 N 的辅助数组 results。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public int[] exchange(int[] nums) {
+        int[] results = new int[nums.length];
+        int i = 0;
+        int j = nums.length-1;
+        
+        for(int k = 0; k<nums.length; k++){
+            if(nums[k] % 2 !=0){
+                results[i++] = nums[k];
+                
+            }else{
+                results[j--] = nums[k];
+            }
+        }
+        return results;
+    }
+}
+```
+
+执行结果：
+
+![image-20200710155956757](leetcode.assets/image-20200710155956757.png)
+
+
+
+#### 双指针法
+
+上面的辅助数组法使用了头尾双指针来定位存放在新数组中的位置。我们也可以使用双指针直接操作原数组。
+
+
+
+**算法分析：**
+
+1. 设置头部指针 `i` 指向下一个奇数索引，尾部指针 `j` 指向下一个偶数索引，`i` 初值为 `0`，`j` 初值为 `N - 1`；
+2. 遍历数组，循环条件为 `i < j` ：
+   1. 搜索从左到右第一个偶数，用 `i` 指向这个偶数；
+   2. 搜索从右到左第一个奇数，用 `j` 指向这个奇数； 
+3. 交换 `nums[i]` 和 `nums[j]`；
+4. 返回原数组 `nums`；
+
+
+
+**复杂度分析：**
+
+* **时间复杂度O(N)：**需要调换几次位置，循环就执行几次。最差情况下要调换 `N/2` 次位置。时间复杂度为 `O(N)`；
+* **空间复杂度O(1)：**使用常数个辅助变量。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public int[] exchange(int[] nums) {
+        int i = 0;
+        int j = nums.length - 1;
+        int temp;
+        while(i < j){
+            while(nums[i] % 2 != 0 && i < j){  // 找到从左到右第一个为偶数的元素的索引
+                i++;
+            }
+            while(nums[j] % 2 == 0 && i < j){  // 找到从右到左第一个为奇数的元素的索引
+                j--;
+            }
+            if(i<j){    // 如果找到的偶数在奇数前面，交换它们的位置
+                temp = nums[i];
+                nums[i] = nums[j];
+                nums[j] = temp;
+            }
+        }
+                
+        return nums;
+    }
+}
+```
+
+执行结果：
+
+![image-20200710162101189](leetcode.assets/image-20200710162101189.png)
+
+
+
+## # 22 链表中倒数第k个节点
+
+### 问题描述
+
+```
+输入一个链表，输出该链表中倒数第k个节点。为了符合大多数人的习惯，本题从1开始计数，即链表的尾节点是倒数第1个节点。例如，一个链表有6个节点，从头节点开始，它们的值依次是1、2、3、4、5、6。这个链表的倒数第3个节点是值为4的节点。
+
+ 
+示例：
+给定一个链表: 1->2->3->4->5, 和 k = 2.
+
+返回链表 4->5.
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 前置 k 指针
+
+
+
+**算法流程：**
+
+1. 借助两个辅助结点游标 `kPrevious` 和 `current`；
+2. 初始情况下两个游标都指向头结点；
+3. 如果链表长度小于 `k`，则返回 `null`，否则将 current 后移 `k - 1` 位，此时从 `kPrevious` 到 `current` 间共有 k 个结点（包括 `kPrevious` 和 `current` 自身）；
+4. 遍历链表，如果此时 `current` 是不是尾结点，`current` 和 `kPrevious` 都后移 `1` 位。
+5. 遍历结束后返回 `kPrevious`。
+
+
+
+**算法复杂度：**
+
+* **时间复杂度O(N)：**遍历长度为 `N` 的链表，平均访问结点数为 `N / 2`，最差情况下访问结点数为 `N`；
+* **空间复杂度O(1)：**仅使用常数个参数，`kPrevious`，`current`。
+
+
+
+示例代码：
+
+```Java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode getKthFromEnd(ListNode head, int k) {
+        if(head == null){
+            return null;
+        }
+        // 初始两个游标都指向头结点
+        ListNode kPrevious = head;
+        ListNode current = head;
+        
+        // kPrevious 和 current 索引之间还有 k-2 个结点
+        // 将 current 后移 k-1 位
+        while(k>1){
+            // 如果原链表的长度小于k，则会返回 null
+            if(current.next == null){
+                return null;
+            }
+            current = current.next;    
+            k--;
+        }
+        
+        // 如果 current 是不是尾结点，current 和 kPrevious 都后移 1 位
+        while(current.next != null){
+            current = current.next;
+            kPrevious = kPrevious.next;
+        }
+        
+        return kPrevious;
+    }
+}
+```
+
+执行结果：
+
+![image-20200710173243094](leetcode.assets/image-20200710173243094.png)
