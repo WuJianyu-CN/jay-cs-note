@@ -2773,3 +2773,509 @@ class Solution {
 执行结果：
 
 ![image-20200710173243094](leetcode.assets/image-20200710173243094.png)
+
+
+
+## # 24 反转链表
+
+### 问题描述
+
+```Java
+定义一个函数，输入一个链表的头节点，反转该链表并输出反转后链表的头节点。
+
+示例:
+输入: 1->2->3->4->5->NULL
+输出: 5->4->3->2->1->NULL
+ 
+
+限制：
+0 <= 节点个数 <= 5000
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 递归法	// TODO
+
+
+
+#### 双指针法
+
+
+
+**算法流程：**
+
+1. 设置三个游标指针，`previous` 指向头结点，`current` 指向头结点的后继结点；
+2. 头结点逆转后变为尾结点，设置其后继为 `null`；
+3. 遍历链表：
+   * 保存原链表中当前结点的后继结点到临时的 `next`；
+   * 逆转 `current` 和 `previous` 的指向；
+   * `current` 指向原链表中的后继结点；
+4. 遍历结束后，`current` 为 `null`，`previous` 指向尾结点。由于遍历中将所有结点的指向都逆转了，因此 `previous`  指向的是目标链表的头结点，返回 `previous` 即可。
+
+
+
+**算法复杂度：**
+
+* 时间复杂度O(N)：遍历长度为 N 的链表；
+* 空间复杂度O(1)：借助常数大小的变量：`previous`，和 `current`。
+
+示例代码：
+
+```Java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ * int val;
+ * ListNode next;
+ * ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        if (head == null) {
+            return null;
+        }
+
+        ListNode previous = head;
+        ListNode current = head.next;
+        
+        ListNode next = null;
+        // 头结点逆转后为尾结点，后继应当为 null
+        head.next = null;
+        while (current != null) {
+            // 保存原链表中当前结点的后继结点到 next
+            next = current.next;
+            // 逆转 current 和 previous 的指向
+            current.next = previous;            
+            previous = current;
+            // current 指向原链表中的后继结点
+            current = next;
+        }
+        return previous;
+    }
+}
+```
+
+执行结果：
+
+![image-20200710220206275](leetcode.assets/image-20200710220206275.png)
+
+
+
+## # 25 合并两个排序的链表
+
+### 问题描述
+
+```Java
+输入两个递增排序的链表，合并这两个链表并使新链表中的节点仍然是递增排序的。
+
+示例1：
+输入：1->2->4, 1->3->4
+输出：1->1->2->3->4->4
+    
+限制：
+0 <= 链表长度 <= 1000
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 伪头结点法
+
+
+
+**算法流程：**
+
+1. 添加一个伪头结点 head ，使得两个链表的头结点失去特殊性，算法处理它们的过程和其它结点一样；
+2. 设置三个游标结点，当前指向 `list1` 的 `current1` ，初始值指向 `list1` 的头结点，当前指向 `list2` 的`current2` 初始值指向 `list2` 的头结点和当前指向新链表的`newCurrent` ，初始值指向伪头结点；
+3. 遍历两个链表，遍历到某个链表的尾结点退出循环，循环中比较 `current1.val <= current2.val`：
+   * `true`：新链表的下一个结点为 `current1` 指向的结点，`newCurrent` 指向 `current1` ，`current1` 指向 `list1` 中下一个元素；
+   * `false`：新链表的下一个结点为 `current2` 指向的结点，`newCurrent` 指向 `current2` ，`current2` 指向 `list2` 中下一个元素；
+4. 遍历结束后，如果 list1 为空，则将 list2 的所有剩余结点添加到新链表中；如果 list2 为空，则将 list1 的所有剩余结点添加到新链表中；
+5. 返回伪头结点的后继结点，即为新链表的头结点。
+
+
+
+**算法复杂度：**
+
+* **时间复杂度O(N)：**遍历循环次数为两个链表中较长的一个的长度；
+* **空间复杂度O(1)：**借助了常数个辅助变量：`head`，`current1`，`current2` 和 `newCurrent`。
+
+
+
+示例代码：
+
+```Java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+    
+        if(l1 == null && l2 == null){
+            return null;
+        }
+        if(l1 == null){
+            return l2;
+        }
+        if(l2 == null){
+            return l1;
+        }
+        
+        ListNode head = new ListNode(0);
+        ListNode current1 = l1;
+        ListNode current2 = l2;
+        ListNode newCurrent = head;
+        
+        while(current1 != null && current2 !=null){
+            if(current1.val <= current2.val){
+                newCurrent.next = current1;
+                newCurrent = current1;
+                current1 = current1.next;
+            }else{
+                newCurrent.next = current2;
+                newCurrent = current2;
+                current2 = current2.next;
+            }
+        }
+        
+        if(current1 == null){
+            newCurrent.next = current2;
+        }
+        if(current2 == null){
+            newCurrent.next = current1;
+        }
+        
+        return head.next;
+        
+    }    
+    
+}
+```
+
+执行结果：
+
+![image-20200711171803718](leetcode.assets/image-20200711171803718.png)
+
+
+
+## # 26 树的子结构
+
+### 问题描述
+
+```Java
+输入两棵二叉树A和B，判断B是不是A的子结构。(约定空树不是任意一个树的子结构)
+B是A的子结构， 即 A中有出现和B相同的结构和节点值。
+
+例如:
+给定的树 A:
+
+     3
+    / \
+   4   5
+  / \
+ 1   2
+给定的树 B：
+
+   4 
+  /
+ 1
+返回 true，因为 B 与 A 的一个子树拥有相同的结构和节点值。
+
+示例 1：
+输入：A = [1,2,3], B = [3,1]
+输出：false
+         
+示例 2：
+输入：A = [3,4,5,1,2], B = [4,1]
+输出：true
+         
+限制：
+0 <= 节点个数 <= 10000
+
+```
+
+
+
+### 解题思路
+
+要判断 `B` 是否为  `A` 的子结构，本质上还是对 `A` 进行遍历的问题。
+
+考虑极端的情况，`B` 只有一个根结点 `rootB`，那么问题就会退化为判断 `A` 中是否包含  `rootB` 结点。
+
+推广到一般情况下，`B` 除了 `rootB` 还有其它结点。可递归判断 `B` 的左右子树结构和是否在 `A` 的左右子树中。
+
+
+
+
+
+#### 递归 + 前序遍历法
+
+
+
+先分析判断 `B` 的结构在 `A` 中是否从根结点开始的方法 `doesTreeAHasTreeB`：
+
+1. 如果 `B` 为 `null`，说明 `A` 中包含 `B`，返回 `true`；
+
+2. 如果 `A` 为 `null`，说明 `A` 中不包含 `B`，返回 `false`；
+
+3. 判断 `A` 的根结点值和 `B` 的根结点值是否相同：
+
+   * 相同，如果 `A` 的左子树中包含 `B` 的右子树，且 `A` 的右子树中包含 `B` 的右子树，则返回 `true`，否则返回 `false`；
+   * 不同，返回 `false`。
+
+   
+
+**算法流程：**
+
+1. 判断 `A` 的根结点 `rootA` 和 `B` 的根结点 `rootB` 是否相等：
+   * 相等，调用方法 `doesTreeAHasTreeB` 查询 B 的结构在 A 中是否从根结点开始；
+   * 不相等，递归查询 B 是否在 A 的左子树中，如果不在，则递归查询 B 是否在 A 的右子树中；
+2. 如果递归结束后没有 `A` 中找到子结构和 `B` 相同，则返回 `false`。
+
+
+
+**算法复杂度：**
+
+1. **时间复杂度O(NN)：**树 `A` 的结点数为 `N`， 树 `B` 的结点数为 `M`，要遍历树 `A` 找到和 `B` 值相等的结点，然后再遍历树 `B`，时间复杂度为 `O(MN)`；
+2. **空间复杂度O(1)：**没有借助辅助结点。 
+
+
+
+
+示例代码：
+
+```Java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public boolean isSubStructure(TreeNode A, TreeNode B) {
+        boolean result = false;
+        
+        if(A != null & B!= null){
+            if(A.val == B.val){
+                result = doesTreeAHasTreeB(A, B);
+            }
+            if(!result){
+                result = isSubStructure(A.left, B);
+            }
+            if(!result){
+                result = isSubStructure(A.right, B);
+            }
+        }
+        
+        
+        return result;
+    }
+    
+    
+    public boolean doesTreeAHasTreeB(TreeNode A, TreeNode B){
+        if(B == null){
+            return true;
+        }
+        if(A == null){
+            return false;
+        }
+        
+        if(A.val != B.val){
+            return false;
+        }
+        
+        return doesTreeAHasTreeB(A.left, B.left) && doesTreeAHasTreeB(A.right, B.right);
+    }
+}
+```
+
+执行结果：
+
+![image-20200711194513662](leetcode.assets/image-20200711194513662.png)
+
+
+
+## # 27 二叉树的镜像
+
+### 问题描述
+
+```Java
+请完成一个函数，输入一个二叉树，该函数输出它的镜像。
+
+例如输入：
+     4
+   /   \
+  2     7
+ / \   / \
+1   3 6   9
+
+镜像输出：
+     4
+   /   \
+  7     2
+ / \   / \
+9   6 3   1
+ 
+示例 1：
+输入：root = [4,2,7,1,3,6,9]
+输出：[4,7,2,9,6,3,1]
+ 
+限制：
+0 <= 节点个数 <= 1000
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 递归法
+
+**算法流程：**
+
+1. 定义树的叶子结点的高度为 `1`；
+2. 从高度为 2 的结点开始，如果它有子结点，则交换它的左右孩子；
+3. 当高度为 2 的结点所有的孩子结点的交换完毕，开始处理高度为 3 的结点；
+4. 依次处理直到根结点，返回根结点即可。
+
+
+
+**算法复杂度：**
+
+1. **时间复杂度O(N)：**遍历树的所有的非叶子结点，时间复杂度为 `O(N)`；
+2. **空间复杂度O(1)：**没有借助辅助结点。 
+
+
+
+示例代码：
+
+```Java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode mirrorTree(TreeNode root) {
+        if(root == null){
+            return null;
+        }
+        // 叶子结点，不需要交换
+        if(root.left == null && root.right == null){
+            return root;
+        }
+        // 交换左右子树的镜像
+        TreeNode temp = mirrorTree(root.left);
+        root.left = mirrorTree(root.right);
+        root.right = temp;
+        
+        return root;
+    }
+}
+```
+
+执行结果：
+
+![image-20200711212453062](leetcode.assets/image-20200711212453062.png)
+
+
+
+#### 广度优先搜索法
+
+上述方法是利用递归从下向上一层层的交换左右子树。
+
+广度优先遍历法是利用队列从上向下一层层地遍历树的结点，我们可以利用它的层次性质，从上往下一层层的交换左右子树。
+
+
+
+**算法流程：**
+
+1. 使用广度优先算法，将 root 结点入队到 queue 中；
+2. 开始遍历：
+   * 如果队列非空，从队首取结点到 current 中，交换 current 的左右子树；
+   * 如果 current 的左右子树非空，则将current的左右孩子结点先后入队；
+3. 返回 root 即可。
+
+
+
+**算法复杂度：**
+
+1. **时间复杂度O(N)：**遍历树的所有的非叶子结点，时间复杂度为 `O(N)`；
+2. **空间复杂度O(N)：**借助了一个辅助队列，按层存放树的结点。 
+
+
+
+示例代码：
+
+```Java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode mirrorTree(TreeNode root) {
+        if(root == null){
+            return null;
+        }
+        // 根结点没有孩子结点，不需要交换
+        if(root.left == null && root.right == null){
+            return root;
+        }
+        
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+        TreeNode current = null;
+        TreeNode temp = null;
+        while(!queue.isEmpty()){
+            // 如果队列非空，从队首取结点到 current 中
+            current = queue.poll();
+            // 交换 current 的左右子树
+            temp = current.left;
+            current.left = current.right;
+            current.right = temp;
+            // 如果 current 的左右子树非空，则将current的左右孩子结点先后入队
+            if(current.left != null){
+                queue.offer(current.left);
+            }
+            if(current.right != null){
+                queue.offer(current.right);
+            }                       
+        }
+        return root;
+    }
+}
+```
+
+执行结果：
+
+![image-20200711213548641](leetcode.assets/image-20200711213548641.png)
+
