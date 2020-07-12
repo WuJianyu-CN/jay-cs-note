@@ -2531,7 +2531,7 @@ p 可能为空，且只包含从 a-z 的小写字母以及字符 . 和 *�
 对长度为 `N` 的数组 `nums[]` 使用双层循环：
 
 1. 第一层循环找到数组中的偶数，保存到临时值 `temp` 中；
-2. 第二层讲偶数后的所有数字全部向前移 1 位，再将 `temp` 赋值给 `nums[N-1]`。
+2. 第二层将偶数后的所有数字全部向前移 1 位，再将 `temp` 赋值给 `nums[N-1]`。
 
 
 
@@ -2608,13 +2608,13 @@ class Solution {
     public int[] exchange(int[] nums) {
         int[] results = new int[nums.length];
         int i = 0;
-        int j = nums.length-1;
-        
-        for(int k = 0; k<nums.length; k++){
-            if(nums[k] % 2 !=0){
+        int j = nums.length - 1;
+
+        for (int k = 0; k < nums.length; k++) {
+            if (nums[k] % 2 != 0) {
                 results[i++] = nums[k];
-                
-            }else{
+
+            } else {
                 results[j--] = nums[k];
             }
         }
@@ -2661,20 +2661,20 @@ class Solution {
         int i = 0;
         int j = nums.length - 1;
         int temp;
-        while(i < j){
-            while(nums[i] % 2 != 0 && i < j){  // 找到从左到右第一个为偶数的元素的索引
+        while (i < j) {
+            while (nums[i] % 2 != 0 && i < j) {  // 找到从左到右第一个为偶数的元素的索引
                 i++;
             }
-            while(nums[j] % 2 == 0 && i < j){  // 找到从右到左第一个为奇数的元素的索引
+            while (nums[j] % 2 == 0 && i < j) {  // 找到从右到左第一个为奇数的元素的索引
                 j--;
             }
-            if(i<j){    // 如果找到的偶数在奇数前面，交换它们的位置
+            if (i < j) {    // 如果找到的偶数在奇数前面，交换它们的位置
                 temp = nums[i];
                 nums[i] = nums[j];
                 nums[j] = temp;
             }
         }
-                
+
         return nums;
     }
 }
@@ -2731,40 +2731,32 @@ class Solution {
 示例代码：
 
 ```Java
-/**
- * Definition for singly-linked list.
- * public class ListNode {
- *     int val;
- *     ListNode next;
- *     ListNode(int x) { val = x; }
- * }
- */
 class Solution {
     public ListNode getKthFromEnd(ListNode head, int k) {
-        if(head == null){
+        if (head == null) {
             return null;
         }
         // 初始两个游标都指向头结点
         ListNode kPrevious = head;
         ListNode current = head;
-        
+
         // kPrevious 和 current 索引之间还有 k-2 个结点
         // 将 current 后移 k-1 位
-        while(k>1){
+        while (k > 1) {
             // 如果原链表的长度小于k，则会返回 null
-            if(current.next == null){
+            if (current.next == null) {
                 return null;
             }
-            current = current.next;    
+            current = current.next;
             k--;
         }
-        
+
         // 如果 current 是不是尾结点，current 和 kPrevious 都后移 1 位
-        while(current.next != null){
+        while (current.next != null) {
             current = current.next;
             kPrevious = kPrevious.next;
         }
-        
+
         return kPrevious;
     }
 }
@@ -2827,14 +2819,6 @@ class Solution {
 示例代码：
 
 ```Java
-/**
- * Definition for singly-linked list.
- * public class ListNode {
- * int val;
- * ListNode next;
- * ListNode(int x) { val = x; }
- * }
- */
 class Solution {
     public ListNode reverseList(ListNode head) {
         if (head == null) {
@@ -2843,7 +2827,7 @@ class Solution {
 
         ListNode previous = head;
         ListNode current = head.next;
-        
+
         ListNode next = null;
         // 头结点逆转后为尾结点，后继应当为 null
         head.next = null;
@@ -2851,7 +2835,7 @@ class Solution {
             // 保存原链表中当前结点的后继结点到 next
             next = current.next;
             // 逆转 current 和 previous 的指向
-            current.next = previous;            
+            current.next = previous;
             previous = current;
             // current 指向原链表中的后继结点
             current = next;
@@ -2915,55 +2899,45 @@ class Solution {
 示例代码：
 
 ```Java
-/**
- * Definition for singly-linked list.
- * public class ListNode {
- *     int val;
- *     ListNode next;
- *     ListNode(int x) { val = x; }
- * }
- */
 class Solution {
     public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
-    
-        if(l1 == null && l2 == null){
+
+        if (l1 == null && l2 == null) {
             return null;
         }
-        if(l1 == null){
+        if (l1 == null) {
             return l2;
         }
-        if(l2 == null){
+        if (l2 == null) {
             return l1;
         }
-        
+
         ListNode head = new ListNode(0);
         ListNode current1 = l1;
         ListNode current2 = l2;
         ListNode newCurrent = head;
-        
-        while(current1 != null && current2 !=null){
-            if(current1.val <= current2.val){
+
+        while (current1 != null && current2 != null) {
+            if (current1.val <= current2.val) {
                 newCurrent.next = current1;
                 newCurrent = current1;
                 current1 = current1.next;
-            }else{
+            } else {
                 newCurrent.next = current2;
                 newCurrent = current2;
                 current2 = current2.next;
             }
         }
-        
-        if(current1 == null){
+
+        if (current1 == null) {
             newCurrent.next = current2;
         }
-        if(current2 == null){
+        if (current2 == null) {
             newCurrent.next = current1;
         }
-        
+
         return head.next;
-        
-    }    
-    
+    }
 }
 ```
 
@@ -3060,48 +3034,36 @@ B是A的子结构， 即 A中有出现和B相同的结构和节点值。
 示例代码：
 
 ```Java
-/**
- * Definition for a binary tree node.
- * public class TreeNode {
- *     int val;
- *     TreeNode left;
- *     TreeNode right;
- *     TreeNode(int x) { val = x; }
- * }
- */
 class Solution {
     public boolean isSubStructure(TreeNode A, TreeNode B) {
         boolean result = false;
-        
-        if(A != null & B!= null){
-            if(A.val == B.val){
+
+        if (A != null && B != null) {
+            if (A.val == B.val) {
                 result = doesTreeAHasTreeB(A, B);
             }
-            if(!result){
+            if (!result) {
                 result = isSubStructure(A.left, B);
             }
-            if(!result){
+            if (!result) {
                 result = isSubStructure(A.right, B);
             }
         }
-        
-        
         return result;
     }
-    
-    
-    public boolean doesTreeAHasTreeB(TreeNode A, TreeNode B){
-        if(B == null){
+
+    public boolean doesTreeAHasTreeB(TreeNode A, TreeNode B) {
+        if (B == null) {
             return true;
         }
-        if(A == null){
+        if (A == null) {
             return false;
         }
-        
-        if(A.val != B.val){
+
+        if (A.val != B.val) {
             return false;
         }
-        
+
         return doesTreeAHasTreeB(A.left, B.left) && doesTreeAHasTreeB(A.right, B.right);
     }
 }
@@ -3170,29 +3132,20 @@ class Solution {
 示例代码：
 
 ```Java
-/**
- * Definition for a binary tree node.
- * public class TreeNode {
- *     int val;
- *     TreeNode left;
- *     TreeNode right;
- *     TreeNode(int x) { val = x; }
- * }
- */
 class Solution {
     public TreeNode mirrorTree(TreeNode root) {
-        if(root == null){
+        if (root == null) {
             return null;
         }
         // 叶子结点，不需要交换
-        if(root.left == null && root.right == null){
+        if (root.left == null && root.right == null) {
             return root;
         }
         // 交换左右子树的镜像
         TreeNode temp = mirrorTree(root.left);
         root.left = mirrorTree(root.right);
         root.right = temp;
-        
+
         return root;
     }
 }
@@ -3232,30 +3185,21 @@ class Solution {
 示例代码：
 
 ```Java
-/**
- * Definition for a binary tree node.
- * public class TreeNode {
- *     int val;
- *     TreeNode left;
- *     TreeNode right;
- *     TreeNode(int x) { val = x; }
- * }
- */
 class Solution {
     public TreeNode mirrorTree(TreeNode root) {
-        if(root == null){
+        if (root == null) {
             return null;
         }
         // 根结点没有孩子结点，不需要交换
-        if(root.left == null && root.right == null){
+        if (root.left == null && root.right == null) {
             return root;
         }
-        
+
         Queue<TreeNode> queue = new LinkedList<>();
         queue.offer(root);
         TreeNode current = null;
         TreeNode temp = null;
-        while(!queue.isEmpty()){
+        while (!queue.isEmpty()) {
             // 如果队列非空，从队首取结点到 current 中
             current = queue.poll();
             // 交换 current 的左右子树
@@ -3263,12 +3207,12 @@ class Solution {
             current.left = current.right;
             current.right = temp;
             // 如果 current 的左右子树非空，则将current的左右孩子结点先后入队
-            if(current.left != null){
+            if (current.left != null) {
                 queue.offer(current.left);
             }
-            if(current.right != null){
+            if (current.right != null) {
                 queue.offer(current.right);
-            }                       
+            }
         }
         return root;
     }
@@ -3279,3 +3223,113 @@ class Solution {
 
 ![image-20200711213548641](leetcode.assets/image-20200711213548641.png)
 
+
+
+
+
+## # 28 对称的二叉树
+
+### 问题描述
+
+```Java
+请实现一个函数，用来判断一棵二叉树是不是对称的。如果一棵二叉树和它的镜像一样，那么它是对称的。
+
+例如，二叉树 [1,2,2,3,4,4,3] 是对称的。
+    1
+   / \
+  2   2
+ / \ / \
+3  4 4  3
+    
+但是下面这个 [1,2,2,null,3,null,3] 则不是镜像对称的:
+    1
+   / \
+  2   2
+   \   \
+   3    3
+ 
+示例 1：
+输入：root = [1,2,2,3,4,4,3]
+输出：true
+        
+示例 2：
+输入：root = [1,2,2,null,3,null,3]
+输出：false
+ 
+限制：
+0 <= 节点个数 <= 1000
+        
+```
+
+
+
+### 解题思路
+
+
+
+#### 递归法
+
+我们通常使用的遍历二叉树的算法有三种，相应的镜像遍历二叉树的算法也有三种：
+
+| 遍历     | 流程                                               | 镜像遍历 | 流程                                               |
+| -------- | -------------------------------------------------- | -------- | -------------------------------------------------- |
+| 前序遍历 | 访问根结点<br />递归访问左子树<br />递归访问右子树 | 前序遍历 | 访问根结点<br />递归访问右子树<br />递归访问左子树 |
+| 中序遍历 | 递归访问左子树<br />访问根结点<br />递归访问右子树 | 中序遍历 | 递归访问右子树<br />访问根结点<br />递归访问左子树 |
+| 后序遍历 | 递归访问左子树<br />递归访问右子树<br />访问根结点 | 后序遍历 | 递归访问右子树<br />递归访问左子树<br />访问根结点 |
+
+
+
+**算法流程：**
+
+1. 对二叉树同时进行前序遍历和镜像前序遍历。我们可以通过递归来判断处于镜像位置的两个结点是否满足对称性；
+2. 开始遍历：
+   * 互为镜像位置的两个结点均为 `null`，满足对称性，返回 `true`；
+   * 互为镜像位置的两个结点一个为 `null`，一个非 `null`，不满足对称性，返回 `false`；
+   * 互为镜像位置的两个结点都非 `null`，但结点值不同，不满足对称性，返回 `false`；
+   * 如果一个结点的左子树和它的镜像结点的右子树满足对称性，并且它的右子树和它的镜像结点的左子树满足对称性，，则这两个结点满足对称性，返回 `true`；
+3. 递归结束，返回最终结果。
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：遍历二叉树，时间复杂度为 `O(N)`；
+* **空间复杂度O(1)**：没有辅助变量；
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        return mySymmetric(root, root);
+    }
+
+    public boolean mySymmetric(TreeNode leftRoot, TreeNode rightRoot) {
+        // 镜像位置的结点为空的情况也考虑进去
+        if (leftRoot == null && rightRoot == null) {
+            return true;
+        }
+        // 镜像位置的结点一个为 null，一个非空，树不对称，返回 false
+        if (leftRoot == null || rightRoot == null) {
+            return false;
+        }
+        // 镜像位置的结点值不同，返回 false
+        if (leftRoot.val != rightRoot.val) {
+            return false;
+        }
+		
+        // 结点的左子树要和它的镜像结点的右子树成镜像
+        // 结点的右子树要和它的镜像结点的左子树成镜像
+        return mySymmetric(leftRoot.left, rightRoot.right) &&
+                mySymmetric(leftRoot.right, rightRoot.left);
+    }
+}
+```
+
+
+
+执行结果：
+
+![image-20200712103709503](leetcode.assets/image-20200712103709503.png)
