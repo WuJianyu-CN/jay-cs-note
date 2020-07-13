@@ -3333,3 +3333,148 @@ class Solution {
 执行结果：
 
 ![image-20200712103709503](leetcode.assets/image-20200712103709503.png)
+
+
+
+## # 29 顺时针打印矩阵
+
+### 问题描述
+
+```Java
+输入一个矩阵，按照从外向里以顺时针的顺序依次打印出每一个数字。
+
+示例 1：
+输入：matrix = [[1,2,3],[4,5,6],[7,8,9]]
+输出：[1,2,3,6,9,8,7,4,5]
+    
+示例 2：
+输入：matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]
+输出：[1,2,3,4,8,12,11,10,9,5,6,7]
+ 
+
+限制：
+0 <= matrix.length <= 100
+0 <= matrix[i].length <= 100
+
+```
+
+
+
+### 解题思路
+
+
+
+####  边界移动法
+
+边界移动指的是打印过程中，当前打印的矩阵边界会变化。但需要注意的是，这里并不是说，边界移动了结点就不移动了。而是我们每次打印过一条边之后，就将那条边对应的边界收缩。这样已结点为参照物，它始终是在沿着边界在移动。
+
+
+
+用一下例子说明打印流程：
+
+比如如下的从左到右，从 `matrix[left][top]` 沿着上边界打印到 `matrx[right][top]`，打印结束后，上边界 `top--`，如果此时，`top < bottom` 说明，已经没有结点需要打印了。返回结果即可。
+
+![image-20200713175735598](leetcode.assets/image-20200713175735598.png)
+
+下一次遍历，边界向内收缩了一圈，而结点依旧是按着边界依次打印的。因此执行流程第一圈执行逻辑一样。
+
+![image-20200713180421694](leetcode.assets/image-20200713180421694.png)
+
+**算法流程**：
+
+1. 获取矩阵边界：`top(0)`，`bottom(matrix.length-1)`，`left(0)` 和 `right(matrix[0].length-1)`。
+2. 创建用于返回结果的长度为 `(bottom+1) * (right+1)` 的一维数组 `results`，并设置索引记录每次打印存放的位置；
+3. 开始打印矩阵：
+   * 从左向右打印；
+   * 从上向下打印；
+   * 从右向左打印；
+   * 从下向上打印
+4. 返回 `results`。
+
+
+
+具体的边界打印的流程为：
+
+1. 根据边界确定打印边界点；
+2. 打印后边界移动；
+3. 判断打印是否结束。
+
+
+
+**复杂度分析**：
+
+1. **时间复杂度O(MN)**：矩阵行数为 `M`，列数为 `N`，打印流程遍历了所有元素，时间复杂度为 `O(MN)`；
+2. **空间复杂度O(1)**：只引入了常数级别的辅助变量，`top`，`bottom`，`left`，`right`，`length`和`index`。结果数组为方法指定返回类型，并不计入额外空间复杂度中。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public int[] spiralOrder(int[][] matrix) {
+        if (matrix == null) {
+            return null;
+        }
+        if (matrix.length == 0) {
+            return new int[0];
+        }
+
+		// 边界初始值
+        int top = 0;
+        int bottom = matrix.length - 1;
+        int left = 0;
+        int right = matrix[0].length - 1;
+		
+        // 结果打印数组
+        int length = (bottom + 1) * (right + 1);
+        int[] results = new int[length];
+        int index = 0;
+
+        while (true) {
+            // 从左向右打印
+            for (int i = left; i <= right; i++) {
+                results[index++] = matrix[top][i];
+            }
+            top++;
+            if (bottom < top) {
+                break;
+            }
+            // 从上向下打印
+            for (int i = top; i <= bottom; i++) {
+                results[index++] = matrix[i][right];
+            }
+            right--;
+            if (right < left) {
+                break;
+            }
+            // 从右向左打印
+            for (int i = right; i >= left; i--) {
+                results[index++] = matrix[bottom][i];
+            }
+            bottom--;
+            if (bottom < top) {
+                break;
+            }
+            // 从下向上打印
+            for (int i = bottom; i >= top; i--) {
+                results[index++] = matrix[i][left];
+            }
+            left++;
+            if (right < left) {
+                break;
+            }
+        }
+        return results;
+    }
+}
+```
+
+
+
+执行结果：
+
+![image-20200713174246400](leetcode.assets/image-20200713174246400.png)
+
+
+
