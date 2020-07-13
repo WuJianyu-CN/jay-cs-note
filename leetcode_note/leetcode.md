@@ -119,6 +119,16 @@
 
 
 
+## 2.4 常用类和方法
+
+
+
+| 类或接口 | 方法 | 描述 |
+| -------- | ---- | ---- |
+| Queue<T> |      |      |
+|          |      |      |
+|          |      |      |
+
 
 
 
@@ -3475,6 +3485,180 @@ class Solution {
 执行结果：
 
 ![image-20200713174246400](leetcode.assets/image-20200713174246400.png)
+
+
+
+## # 30 包含min函数的栈
+
+### 问题描述
+
+```Java
+定义栈的数据结构，请在该类型中实现一个能够得到栈的最小元素的 min 函数在该栈中，调用 min、push 及 pop 的时间复杂度都是 O(1)。
+ 
+示例:
+MinStack minStack = new MinStack();
+minStack.push(-2);
+minStack.push(0);
+minStack.push(-3);
+minStack.min();   --> 返回 -3.
+minStack.pop();
+minStack.top();      --> 返回 0.
+minStack.min();   --> 返回 -2.
+ 
+提示：
+各函数的调用总次数不超过 20000 次
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 有序链表
+
+每入栈一个元素，就把这个元素插入到一个按升序排列的一个链表中，出栈时，在链表中删除一个栈顶元素的结点。
+
+
+
+**算法流程**：
+
+1. 初始化：创建一个栈 `stack` 和 升序排序的链表 `minList`；
+2. 元素 `x` 入栈：stack 栈顶插入 `x`，在 `minList` 找到合适的位置插入 `x`，保持 `minList` 的有序性；
+3. 出栈：先获取 `stack` 栈顶元素 `x`，在 `minList` 中删除一个值为 `x` 的结点，`stack` 弹出栈顶元素； 
+4. 取栈顶元素：返回 `stack` 栈顶元素 x；
+5. 取栈最小值：返回 `minList` 的首个元素。
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：当前的栈和链表元素个数为 N，插入时要遍历链表，时间复杂度为 O(N)；
+* **空间复杂度O(N)**：额外借助了长度为 `N` 的链表来实现 `min` 函数栈，空间复杂度为O(N)。
+
+
+
+此解法插入时的时间复杂度大于要求的 O(1)，虽然可以等到结果，但不可使用。
+
+
+
+示例代码：
+
+```Java
+class MinStack {
+
+    Deque<Integer> stack;
+    LinkedList<Integer> minList;
+
+    public MinStack() {
+        stack = new LinkedList<>();
+        minList = new LinkedList<>();
+    }
+
+    public void push(int x) {
+        stack.push(x);
+        int index = 0;
+        for (Integer i : minList) {
+            if (x < i) {
+                index = minList.indexOf(i);
+                break;
+            } else {
+                index++;
+            }
+        }
+        minList.add(index, x);
+    }
+
+    public void pop() {
+        int x = stack.peek();
+        minList.remove(Integer.valueOf(x));
+        stack.pop();
+    }
+
+    public int top() {
+        return stack.peek();
+    }
+
+    public int min() {
+        return minList.get(0);
+    }
+}
+```
+
+执行结果：
+
+![image-20200713214056798](leetcode.assets/image-20200713214056798.png)
+
+
+
+#### 额外 min 元素
+
+入栈的值 `x` 如果小于等于当前记录的最小值 `min`，先将当前的 `min` 入栈，再将 `x` 入栈。
+
+
+
+**算法流程**：
+
+1. 初始化：创建一个栈 `stack` 和一个用于记录当前最小值的 `min`；
+2. 元素 `x` 入栈：如果小于等于当前记录的最小值 `min`，先将当前的 `min` 入栈，再将 `x` 入栈；
+3. 出栈：先弹出一个值 x，如果 x 等于 最小值，说明代表当前的最小值的元素已经不在栈中了（但不排除有多个相等的最小值），需要再弹出一个值赋值给 min；
+4. 取栈顶元素：返回 `stack` 栈顶元素 x；
+5. 取栈最小值：返回 min。
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(1)**：当前的栈个数为 `N`，`min`，`push` 及 pop 的时间复杂度均为 `O(1)`；
+* **空间复杂度O(1)**：额外借助了常数变量 `min`，空间复杂度为 `O(1)`。
+
+
+
+示例代码：
+
+```Java
+class MinStack {
+
+    Deque<Integer> stack;
+    int min = Integer.MAX_VALUE;
+
+    /**
+     * initialize your data structure here.
+     */
+    public MinStack() {
+        stack = new LinkedList<>();
+    }
+
+    public void push(int x) {
+        if (x <= min) {
+            stack.push(min);
+            min = x;
+        }
+        stack.push(x);
+    }
+
+    public void pop() {
+        if (stack.pop() == min) {
+            min = stack.pop();
+        }
+
+    }
+
+    public int top() {
+        return stack.peek();
+    }
+
+    public int min() {
+        return min;
+    }
+}
+
+```
+
+执行结果：
+
+![image-20200713225115519](leetcode.assets/image-20200713225115519.png)
 
 
 
