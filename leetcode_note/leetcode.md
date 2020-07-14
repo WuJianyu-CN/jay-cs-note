@@ -3662,3 +3662,610 @@ class MinStack {
 
 
 
+
+
+## # 31 栈的压入、弹出序列
+
+### 问题描述
+
+```Java
+输入两个整数序列，第一个序列表示栈的压入顺序，请判断第二个序列是否为该栈的弹出顺序。假设压入栈的所有数字均不相等。例如，序列 {1,2,3,4,5} 是某栈的压栈序列，序列 {4,5,3,2,1} 是该压栈序列对应的一个弹出序列，但 {4,3,5,1,2} 就不可能是该压栈序列的弹出序列。
+ 
+示例 1：
+输入：pushed = [1,2,3,4,5], popped = [4,5,3,2,1]
+输出：true
+解释：我们可以按以下顺序执行：
+push(1), push(2), push(3), push(4), pop() -> 4,
+push(5), pop() -> 5, pop() -> 3, pop() -> 2, pop() -> 1
+    
+示例 2：
+输入：pushed = [1,2,3,4,5], popped = [4,3,5,1,2]
+输出：false
+解释：1 不能在 2 之前弹出。
+ 
+提示：
+0 <= pushed.length == popped.length <= 1000
+0 <= pushed[i], popped[i] < 1000
+pushed 是 popped 的排列
+    
+```
+
+
+
+### 解题思路
+
+
+
+#### 辅助栈模拟
+
+借用一个辅助栈，模拟入栈和出栈操作的排列。
+
+* **入栈操作**：按照 `pushed` 序列依次入栈；
+* **出栈操作**：每次入栈后，循环判断当前栈顶元素和 `popped` 序列的当前元素是否相同，如果相同则弹出栈顶元素。
+
+
+
+**算法流程**：
+
+1. 初始化：辅助栈 `stack`，`popped` 序列当前索引 `i = 0`；
+2. 遍历 `pushed` 序列：
+   * 元素 `num` 入栈；
+   * 如果 `stack` 非空，并且 `stack` 的栈顶元素和 `popped` 序列的当前元素相同，弹出栈顶元素并且，`popped` 索引 `i` 加一；
+3. 返回值：如果 `stack` 为空，说明 `popped` 序列合法。
+
+
+
+**复杂度分析**：
+
+* **时间复杂度 O(N)**：对于长度为 `N` 的pushed 和 `popped` 序列，每个元素都要经历一次入栈和出栈，时间复杂度为 `O(N)`；
+* **空间复杂度 O(N)**：辅助栈最多同时存储 `N` 个元素。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean validateStackSequences(int[] pushed, int[] popped) {
+        if(pushed.length != popped.length){
+            return false;
+        }
+        Deque<Integer> stack = new LinkedList<>();
+        int i = 0;
+        for (int num : pushed){
+            stack.push(num);
+            while(!stack.isEmpty() && stack.peek() == popped[i]){
+                stack.pop();
+                i++;
+            }
+        }
+        return stack.isEmpty();
+    }
+}
+```
+
+执行结果：
+
+![image-20200713235237137](leetcode.assets/image-20200713235237137.png)
+
+
+
+
+
+## # 32-I 从上到下打印二叉树
+
+### 问题描述
+
+```Java
+从上到下打印出二叉树的每个节点，同一层的节点按照从左到右的顺序打印。
+
+例如:
+给定二叉树: [3,9,20,null,null,15,7],
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+
+返回：
+[3,9,20,15,7]
+ 
+提示：
+节点总数 <= 1000
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 广度优先遍历（BFS）
+
+题目要求中有分层的字眼，自然就会联想到分层遍历的广度优先算法。
+
+借助一个辅助队列 `queue`，分层存放树的结点，使得下层的结点在上层结点的后面。
+
+接著一个辅助链表 `list` ，存放结点的值。
+
+**算法流程**：
+
+1. 初始化：初始化 `queue` 和 `list` ，将树的 `root` 结点入队，结点游标 `current`；
+2. 循环遍历，循环判断 `queue` 是否为空：
+   * `queue` 非空，队首结点出队并赋值给 `current`，将 `current` 的值加入 `list` 中。如果 `current` 的左孩子结点非空，则左孩子入队，如果 `current` 的右孩子非空，则右孩子入队；
+   * `queue` 为空，结束循环；
+3. 将 `list` 转化为 `int[]` 数组，返回此数组。
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：对于有 `N` 个结点的树来说，遍历需要循环 `N` 次，`queue` 入队 `N` 次，出队 `N` 次，`list` 加入元素 `N` 次，转化为数组访问 `N` 次，时间复杂度为 `O(N)`；
+* **空间复杂度O(N)**：辅助 `queue` 和 `list` 最多存储 `N` 个元素。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public int[] levelOrder(TreeNode root) {
+        if (root == null) {
+            return new int[0];
+        }
+        List<Integer> list = new ArrayList<>();
+        Deque<TreeNode> queue = new LinkedList<>();
+        
+        TreeNode current = root;
+        queue.offer(current);
+        while (!queue.isEmpty()) {
+            current = queue.poll();
+            list.add(current.val);
+            if (current.left != null) {
+                queue.offer(current.left);
+            }
+            if (current.right != null) {
+                queue.offer(current.right);
+            }
+        }
+
+        int[] results = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            results[i] = list.get(i);
+        }
+
+        return results;
+    }
+}
+```
+
+执行结果：
+
+![image-20200714092013221](leetcode.assets/image-20200714092013221.png)
+
+
+
+## # 32-II 从上到下打印二叉树 II
+
+### 问题描述
+
+```Java
+从上到下按层打印二叉树，同一层的节点按从左到右的顺序打印，每一层打印到一行。
+
+例如:
+给定二叉树: [3,9,20,null,null,15,7],
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+        
+返回其层次遍历结果：
+        
+[
+  [3],
+  [9,20],
+  [15,7]
+] 
+
+提示：
+节点总数 <= 1000
+        
+```
+
+
+
+### 解题思路
+
+
+
+#### 广度优先遍历（BFS）
+
+
+
+与题 32-I 相比，本题中多添加了一个按层换行的要求。使用的方法依旧是广度优先遍历，我们需要额外记录每一层的结点个数。
+
+当新进入一层开始遍历最左侧的结点时时，记录此时的队列大小 `S` 即可得本层的结点个数。遍历 `S` 个结点后，下一个结点就是下层的最左侧的结点。
+
+
+
+**算法流程**：
+
+1. 初始化：初始化队列 `queue` 和结果链表 `result` ，将树的 `root` 结点入队，结点游标 `current`；
+2. 循环遍历，每次循环开始时创建一个临时的 `list` 用于存放当前层的结点值。循环判断 `queue` 是否为空：
+   * `queue` 非空，记录此时队列的大小，即本层结点个数为 `S`。遍历 `S` 个结点，将它们的值加入到 `list` 中，如果这些结点的左结点非空，则将左结点加入到 `queue` 中，如果右结点非空，则将右结点加入到 `queue` 中；
+   * `queue` 为空，结束循环；
+3. 返回 `result`。
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：广度优先遍历 `N` 个结点，时间复杂度为 `O(N)`；
+* **空间复杂度O(N)**：辅助 `queue` 最多存储 `N` 个元素。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        if (root == null) {
+            return new LinkedList<List<Integer>>();
+        }
+
+        List<List<Integer>> result = new LinkedList<>();
+        Deque<TreeNode> queue = new LinkedList<>();
+        TreeNode current;
+
+        queue.offer(root);
+
+        while (!queue.isEmpty()) {
+            List<Integer> temp = new LinkedList<>();
+            for (int i = queue.size(); i > 0; i--) {
+                current = queue.poll();
+                temp.add(current.val);
+                if (current.left != null) {
+                    queue.offer(current.left);
+                }
+                if (current.right != null) {
+                    queue.offer(current.right);
+                }
+            }
+            result.add(temp);
+        }
+        return result;
+    }
+}
+```
+
+执行结果：
+
+![image-20200714112757863](leetcode.assets/image-20200714112757863.png)
+
+
+
+## # 32-III 从上到下打印二叉树 III
+
+### 问题描述
+
+```Java
+请实现一个函数按照之字形顺序打印二叉树，即第一行按照从左到右的顺序打印，第二层按照从右到左的顺序打印，第三行再按照从左到右的顺序打印，其他行以此类推。
+
+例如:
+给定二叉树: [3,9,20,null,null,15,7],
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+        
+返回其层次遍历结果：
+[
+  [3],
+  [20,9],
+  [15,7]
+]
+ 
+提示：
+节点总数 <= 1000
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 广度优先遍历（BFS）+ 双端链表
+
+
+
+与题 32-II 相比，本题中多添加了一个按层修改打印方向的要求。使用的方法依旧是广度优先遍历，我们需要额外记录每层的层数，用于判断当前层的打印方向。
+
+
+
+**算法流程**：
+
+1. 初始化：初始化队列 `queue` 和结果链表 `result` ，将树的 `root` 结点入队，结点游标 `current`，记录当前的层数的 `level`，`level` 初值为 0；
+2. 循环遍历，每次循环开始时创建一个临时的 `list` 用于存放当前层的结点值。循环判断 `queue` 是否为空：
+   * `queue` 非空，记录此时队列的大小和，即本层结点个数为 `S`。遍历 `S` 个结点，如果 level 为偶数，则将它们的值从 `list` 尾部插入，如果 level 为奇数，将它们的值从 list 头部插入。如果这些结点的左结点非空，则将左结点加入到 `queue` 中，如果右结点非空，则将右结点加入到 `queue` 中；
+   * `queue` 为空，结束循环；
+3. 返回 `result`。
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：广度优先遍历 N 个结点，时间复杂度为 `O(N)`；
+* **空间复杂度O(N)**：辅助 `queue` 最多存储 `N` 个元素。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        if (root == null){
+            return new LinkedList<List<Integer>>();
+        }
+        
+        List<List<Integer>> result = new LinkedList<>();
+        Deque<TreeNode> queue = new LinkedList<>();
+        TreeNode current;
+        
+        queue.offer(root);
+        // 根结点为第 0 层
+        int level = 0;
+        while(!queue.isEmpty()){
+            LinkedList<Integer> temp = new LinkedList<>();
+            
+            for(int i = queue.size(); i > 0; i--){
+                current = queue.poll();
+                
+                if (level % 2 == 0){
+                    // 从左向右打印
+                    temp.addLast(current.val);
+                }else{
+                	// 从右向左打印
+                    temp.addFirst(current.val);
+                }
+                if(current.left != null){
+                    queue.offer(current.left);
+                }
+                if(current.right != null){
+                    queue.offer(current.right);   
+                }
+            }
+            result.add(temp);
+            // 层数加 1
+            level++;
+        }
+        return result;
+    }
+}
+```
+
+执行结果：
+
+![image-20200714120727147](leetcode.assets/image-20200714120727147.png)
+
+
+
+
+
+#### 优化
+
+上述算法中我们使用 `level` 来记录层数：每次遍历完一层结点后，将这一层结点打印：temp 链表加入 `result` 链表中，`level` 加一。这里我们注意到，`result` 链表中的子链表个数和 `level` 是同步递增的。因此可以直接使用 `result` 链表的大小来代替当前层数。
+
+示例代码：
+
+```Java
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        if (root == null) {
+            return new LinkedList<List<Integer>>();
+        }
+
+        List<List<Integer>> result = new LinkedList<>();
+        Deque<TreeNode> queue = new LinkedList<>();
+        TreeNode current;
+
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            LinkedList<Integer> temp = new LinkedList<>();
+
+            for (int i = queue.size(); i > 0; i--) {
+                current = queue.poll();
+                if (result.size() % 2 == 0) {
+                    // 从左向右打印
+                    temp.addLast(current.val);
+                } else {
+                    // 从右向左打印
+                    temp.addFirst(current.val);
+                }
+                if (current.left != null) {
+                    queue.offer(current.left);
+                }
+                if (current.right != null) {
+                    queue.offer(current.right);
+                }
+            }
+            result.add(temp);
+        }
+        return result;
+    }
+}
+```
+
+执行结果：
+
+![image-20200714121409354](leetcode.assets/image-20200714121409354.png)
+
+
+
+## # 33 二叉搜索树的后序遍历序列
+
+### 问题描述
+
+```Java
+输入一个整数数组，判断该数组是不是某二叉搜索树的后序遍历结果。如果是则返回 true，否则返回 false。假设输入的数组的任意两个数字都互不相同。 
+
+参考以下这颗二叉搜索树：
+
+     5
+    / \
+   2   6
+  / \
+ 1   3
+    
+示例 1：
+输入: [1,6,3,2,5]
+输出: false
+    
+示例 2：
+输入: [1,3,2,6,5]
+输出: true 
+
+提示：
+数组长度 <= 1000
+    
+```
+
+
+
+### 解题思路
+
+
+
+#### 递归法
+
+
+
+**背景知识**：
+
+* 二叉搜索树的性质：二叉查找树（Binary Search Tree），又称为二叉搜索树，二叉排序树。
+
+   它或者是一棵空树，或者是具有下列性质的二叉树： 
+
+   1. 若它的左子树不空，则左子树上所有结点的值均小于它的根结点的值； 
+   2. 若它的右子树不空，则右子树上所有结点的值均大于它的根结点的值； 
+   3. 它的左、右子树也分别为二叉排序树。
+
+   因此，若对它进行中序遍历，则是一颗递增的排好序的序列！ 
+
+* 二叉树的后序遍历序列 `postorder[]` 的性质，`postorder` 的长度为 N：
+   1. 序列最后一个元素 `postorder[N - 1]` 一定是二叉树的根结点；
+   2. 序列倒数第二个元素 `postorder[N - 2]` 是根结点的右孩子，而且值一定会大于根结点；
+   3. 从 `postorder[N - 2]` 开始从后往前数，所有的大于 `postorder[N -1]` 的元素，共同组成了根结点的右子树；
+   4. 记 `postorder[M]` 为第一个小于 `postorder[N - 1]` 的元素，它是根结点的左孩子，并且它和剩余的结点都一定会比 `postorder[N - 1]` 小，它们共同组成了根节点的右子树；
+
+
+
+![image-20200714144403234](leetcode.assets/image-20200714144403234.png)
+
+
+
+根据上述性质，我们可以从一个后序遍历序列中获取：
+
+1. 当前二叉树的根结点；
+2. 当前二叉树的右子树后序遍历序列；
+3.  当前二叉树的左子树后序遍历序列；
+
+
+
+**算法流程**：
+
+1. 开始递归：从所给的后序遍历中获取根结点 `root`，右子树的后序遍历序列 `rightPostorder` 和左子树的后序遍历序列 `leftPostorder`。
+2. 递推过程：
+   * 递归处理 `rightPostorder`；
+   * 递归处理 `leftPostorder`；
+3. 递归终止条件：
+   * 后续遍历序列为空，所给的序列是后序遍历数列，返回 `true`；
+   * 获取 `rightPostorder` 或 `leftPostorder` 失败，返回 `false`。
+
+
+
+获取 `rightPostorder` 或 `leftPostorder` 是否成功的判断方法：如果 `leftPostorder` 中有比 `root` 大的值，则说明这个序列不是后序遍历序列，获取失败。
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N^2)**：每次递归都会找出 `root` 结点，递归次数为 `N`。每轮遍历都会遍历树的的结点，时间复杂度为 `O(N)`；
+* **空间复杂度O(N)**：最差情况下，成为一颗单链表，递归栈深度为 `N`。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean verifyPostorder(int[] postorder) {
+        if (postorder == null) {
+            return false;
+        }
+        if (postorder.length == 0) {
+            return true;
+        }
+
+        return myVerify(postorder, 0, postorder.length - 1);
+
+    }
+
+    public boolean myVerify(int[] postorder, int start, int end) {
+        if (start >= end) {
+            return true;
+        }
+		
+        // 获取根结点
+        int root = postorder[end];
+		
+        // 找到左子树的后序遍历序列头尾索引
+        int leftStart = start;
+        int leftEnd = start;
+        while (leftEnd < end) {
+            if (postorder[leftEnd] > root) {
+                break;
+            }
+            leftEnd++;
+        }
+
+        // 找到右子树的后序遍历序列头尾索引
+        int rightStart = leftEnd;
+        int rightEnd = leftEnd;
+        while (rightEnd < end) {
+            if (postorder[rightEnd] < root) {
+                return false;
+            }
+            rightEnd++;
+        }
+        // 右子树后面一定会紧跟着 root 结点
+        // rightEnd == end 为可行性剪枝，如果不剪枝可能会超出运行时间限制
+        return rightEnd == end &&
+                myVerify(postorder, leftStart, leftEnd - 1) &&
+                myVerify(postorder, rightStart, rightEnd - 1);
+    }
+}
+
+```
+
+执行结果：
+
+![image-20200714160442892](leetcode.assets/image-20200714160442892.png)
+
+
+
+#### 单调递增栈辅助，逆向遍历数组
+
+[单调递增栈辅助，逆向遍历数组][https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-hou-xu-bian-li-xu-lie-lcof/solution/dan-diao-di-zeng-zhan-by-shi-huo-de-xia-tian/]
+
+参考此解法
+
