@@ -4269,3 +4269,316 @@ class Solution {
 
 参考此解法
 
+
+
+
+
+## # 34 二叉树中和为某一值的路径
+
+### 问题描述
+
+```Java
+输入一棵二叉树和一个整数，打印出二叉树中节点值的和为输入整数的所有路径。从树的根节点开始往下一直到叶节点所经过的节点形成一条路径。
+ 
+示例:
+给定如下二叉树，以及目标和 sum = 22，
+
+              5
+             / \
+            4   8
+           /   / \
+          11  13  4
+         /  \    / \
+        7    2  5   1
+
+返回:
+[
+   [5,4,11,2],
+   [5,8,4,5]
+]
+ 
+
+提示：
+节点总数 <= 10000
+    
+```
+
+
+
+### 解题思路
+
+
+
+#### 回溯法
+
+
+
+在二叉树中寻找和为某一值的路径，要求我们从根结点记录到叶子结点。二叉树的遍历有三种，前序，中序和后序遍历。其中只有前序遍历是先访问根结点的，符合我们这次从根结点开始记录路径的要求。
+
+
+
+利用前序遍历的回溯法求解，首先需要确定约束条件：当前结点是否为叶结点，当前保存路径中的结点总和是否为所求值。
+
+
+
+**算法流程**：
+
+* 递归参数：当前结点 `current`，当前目标值 `target`；
+
+* 递归终止条件：`current` 为空；
+
+* 递推流程：
+  1. 将 `current` 结点值加入到 `path` 链表中；
+  2. 如果 `current` 为叶子节点，且 `target` 值 为 `0`（`path` 队列中的结点值之和等于目标总值 `sum`）；
+  3. 递归处理 `current` 的左子树和右子树；
+  4. 回溯到上一结点时，在 path 链表中的删除最后一个元素（当前结点）；
+* 返回值：记录所有可行路径的 `result`。
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：需要前序遍历二叉树的所有的 N 个结点；
+* **空间复杂度O(N)**：最差情况下，二叉树变为一个链表，`path` 中要存放所有的 `N` 个结点。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+
+    LinkedList<List<Integer>> result = new LinkedList<>();
+    LinkedList<Integer> path = new LinkedList<>();
+
+    public List<List<Integer>> pathSum(TreeNode root, int sum) {
+        recursion(root, sum);
+        return result;
+    }
+
+    public void recursion(TreeNode current, int target) {
+        // 当前结点为 null
+        if (current == null) {
+            return;
+        }
+        // 将当前结点值加入到 path 中
+        path.add(current.val);
+        // 更新剩余目标值
+        target -= current.val;
+        // 如果 current 为叶子节点，且 target 值 为 0，说明找到一条符合要求的路径
+        if (target == 0 && current.left == null && current.right == null) {
+            result.add(new LinkedList<>(path));
+        }
+        /// 递归处理左右子树
+        recursion(current.left, target);
+        recursion(current.right, target);
+
+        // 回溯到上一结点时，在 path 链表中的删除最后一个元素（当前结点）
+        path.removeLast();
+    }
+}
+```
+
+执行结果：
+
+![image-20200715105756361](leetcode.assets/image-20200715105756361.png)
+
+
+
+## # 34 二叉树中和为某一值的路径
+
+### 问题描述
+
+
+
+> 请实现 copyRandomList 函数，复制一个复杂链表。在复杂链表中，每个节点除了有一个 next 指针指向下一个节点，还有一个 random 指针指向链表中的任意节点或者 null。
+>
+>  
+>
+> 示例 1：
+>
+> ![image-20200715115305271](leetcode.assets/image-20200715115305271.png)
+>
+> 输入：head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
+> 输出：[[7,null],[13,0],[11,4],[10,2],[1,0]]
+>
+> 示例 2：
+>
+> ![image-20200715115322302](leetcode.assets/image-20200715115322302.png)
+>
+> 输入：head = [[1,1],[2,1]]
+> 输出：[[1,1],[2,1]]
+>
+> 示例 3：
+>
+> ![image-20200715115337584](leetcode.assets/image-20200715115337584.png)
+>
+> 输入：head = [[3,null],[3,0],[3,null]]
+> 输出：[[3,null],[3,0],[3,null]]
+>
+> 示例 4：
+>
+> 输入：head = []
+> 输出：[]
+> 解释：给定的链表为空（空指针），因此返回 null。
+>
+>
+> 提示：
+>
+> -10000 <= Node.val <= 10000
+> Node.random 为空（null）或指向链表中的节点。
+> 节点数目不超过 1000 。
+
+
+
+### 解题思路
+
+
+
+#### 哈希表法
+
+
+
+使用哈希表映射原链表的所有结点和它们的复制结点。再将复制结点构建为新的链表。
+
+
+
+**算法流程**：
+
+1. 创建一个 `HashMap`，`<key, value>` 为 `<原结点，复制结点>`；
+2. 遍历原链表，创建所有原结点到复制结点的映射；
+3. 按照原链表的结点链接方式，在复制结点间构建新的链表；
+4. 返回新链表的头部。
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：遍历了两次原链表，第一次是复制所有结点，第二次是将复制结点构建为新的链表，时间复杂度为 `O(N)`；
+* **空间复杂度O(N)**：借助了一个 `HashMap`，存放了长度为 `N` 的原链表和它的复制链表的所有的 `2N` 个结点，空间复杂度为 `O(N)`。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public Node copyRandomList(Node head) {
+        if (head == null) {
+            return head;
+        }
+
+        // Map <原结点，复制结点>
+        Map<Node, Node> copyMap = new HashMap<>();
+
+        // 创建所有原结点到复制结点的映射
+        Node current = head;
+        while (current != null) {
+            copyMap.put(current, new Node(current.val));
+            current = current.next;
+        }
+
+        // 将复制结点按照原结点的链接方式构建出新的链表
+        current = head;
+        while (current != null) {
+            Node copyNode = copyMap.get(current);
+            copyNode.next = copyMap.get(current.next);
+            copyNode.random = copyMap.get(current.random);
+            current = current.next;
+        }
+        // 返回新链表头
+        return copyMap.get(head);
+    }
+}
+```
+
+执行结果：
+
+![image-20200715150727865](leetcode.assets/image-20200715150727865.png)
+
+
+
+#### 原地复制法
+
+哈希表法借助了额外的辅助空间，下面介绍一种不是用额外空间，在原链表中构建新链表的方式。
+
+
+
+**算法流程**：
+
+1. 创建所有复制节点并插入到原链表中；
+   * `1->2->3->null ==> 1->1'->2->2'->3->3'->null`
+2. 处理复制结点的 random 属性；
+3. 将复制后的链表分离成两个链表
+   * `1->1'->2->2'->3->3'->null  ==> 1->2->3->null || 1'->2'->3'->null`
+4. 返回新的链表头
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：遍历了三次链表，每次遍历 `N` 个结点，时间复杂度为 `O(N)`；
+* **空间复杂度O(1)**：借助了常数个辅助游标 `current`。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public Node copyRandomList(Node head) {
+        if (head == null) {
+            return null;
+        }
+
+        // 创建所有复制节点并插入到原链表中 
+        // 1->2->3->null ==> 1->1'->2->2'->3->3'->null
+        Node current = head;
+        while (current != null) {
+            Node copyNode = new Node(current.val);
+
+            // 将复制结点插入到原结点后
+            copyNode.next = current.next;
+            current.next = copyNode;
+
+            // 指向下一个原结点
+            current = copyNode.next;
+        }
+
+        // 处理复制结点的 random 属性
+        current = head;
+        while (current != null) {
+            if (current.random != null) {
+                current.next.random = current.random.next;
+            }
+            // 指向下一个原结点
+            current = current.next.next;
+        }
+
+        // 将复制后的链表分离成两个链表
+        // 1->1'->2->2'->3->3'->null  ==> 1->2->3->null || 1'->2'->3'->null
+        Node newHead = head.next;
+        current = head;
+        while (current != null) {
+            // 提前保存下一个原结点的位置
+            Node temp = current.next.next;
+            if (current.next.next != null) {
+                current.next.next = current.next.next.next;
+            }
+
+            current.next = temp;
+            current = current.next;
+        }
+
+        return newHead;
+    }
+}
+
+```
+
+执行结果：
+
+![image-20200715155554075](leetcode.assets/image-20200715155554075.png)
+
+
+
