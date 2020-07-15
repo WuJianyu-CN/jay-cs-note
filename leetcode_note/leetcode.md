@@ -4385,7 +4385,7 @@ class Solution {
 
 
 
-## # 34 二叉树中和为某一值的路径
+## # 35 复杂链表的复制
 
 ### 问题描述
 
@@ -4582,3 +4582,125 @@ class Solution {
 
 
 
+
+
+## # 36 二叉搜索树与双向链表
+
+### 问题描述
+
+> 输入一棵二叉搜索树，将该二叉搜索树转换成一个排序的循环双向链表。要求不能创建任何新的节点，只能调整树中节点指针的指向。
+>
+>  为了让您更好地理解问题，以下面的二叉搜索树为例： 
+>
+> 
+>
+> ![image-20200715161919260](leetcode.assets/image-20200715161919260.png)
+>
+>  
+>
+> 我们希望将这个二叉搜索树转化为双向循环链表。链表中的每个节点都有一个前驱和后继指针。对于双向循环链表，第一个节点的前驱是最后一个节点，最后一个节点的后继是第一个节点。
+>
+> 下图展示了上面的二叉搜索树转化成的链表。“head” 表示指向链表中有最小元素的节点。
+>
+>  
+>
+> ![image-20200715163044321](leetcode.assets/image-20200715163044321.png)
+>
+>  
+>
+> 特别地，我们希望可以就地完成转换操作。当转化完成以后，树中节点的左指针需要指向前驱，树中节点的右指针需要指向后继。还需要返回链表中的第一个节点的指针。
+>
+> 
+
+
+
+### 解题思路
+
+
+
+#### 中序遍历法
+
+二叉搜索树的重要性质：对二叉搜索数的中序遍历可得到一个递增的序列。
+
+题目要求返回包含最小元素结点，我们可以用中序遍历构建一个递增的双向链表，再返回头结点即可。
+
+
+
+**算法流程**：
+
+1. 设置两个游标，`head` 指向双向链表的头结点，`previous` 指向当前遍历访问结点在链表中的前驱结点；
+2. 中序遍历二叉树：
+   * 中序遍历当前结点的左子树；
+   * 构建双向链表；
+   * 中序遍历当前结点的右子树；
+3. 将构建后的双向链表头尾相连；
+4. 返回 `head` 结点；
+
+
+
+**构建双向链表流程**：
+
+1. 判断 `previous` 是否为 `null`：
+   * 为 `null`：表明此时为初始情况，正在访问的 `current` 为根结点，将 `head` 指向 `current`；
+   * 不为 `null`：将前驱结点 `previous` 指向当前结点 `current`；
+2. 将 `current` 的 `left` 指向 `previous`；
+3. 上述两步将当前结点 `current` 和它的前驱结点 `previous` 相互链接，将 previous 向后移一个元素；
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：中序遍历二叉树，时间复杂度为 `O(N)`；
+* **空间复杂度O(N)**：借助了常数个游标 `head`，`previous`，深度优先遍历的栈深度为二叉树的高度，最差情况下，二叉树退化为链表，空间复杂度为 `O(N)`。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    Node head;
+    Node previous;
+
+    public Node treeToDoublyList(Node root) {
+        if (root == null) {
+            return null;
+        }
+        inorder(root);
+        // 链表头尾相连
+        head.left = previous;
+        previous.right = head;
+
+        return head;
+    }
+
+    public void inorder(Node current) {
+        if (current == null) {
+            return;
+        }
+        // 遍历左子树
+        inorder(current.left);
+
+        // 构建双向链表
+        if (previous == null) {
+            // 初始情况，previous 为 null，current 结点为链表头结点
+            head = current;
+        } else {
+            // 前面结点指向后面结点
+            previous.right = current;
+        }
+        // 后面结点指向前面结点
+        current.left = previous;
+        // previous 指向链表中下一个结点
+        previous = current;
+
+        // 遍历右子树
+        inorder(current.right);
+    }
+}
+
+```
+
+执行结果：
+
+![image-20200715172648254](leetcode.assets/image-20200715172648254.png)
