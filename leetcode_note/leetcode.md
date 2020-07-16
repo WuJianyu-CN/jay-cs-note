@@ -4500,7 +4500,7 @@ class Solution {
 
 #### 原地复制法
 
-哈希表法借助了额外的辅助空间，下面介绍一种不是用额外空间，在原链表中构建新链表的方式。
+哈希表法借助了额外的辅助空间，下面介绍一种不借助额外空间，在原链表中构建新链表的方式。
 
 
 
@@ -4704,3 +4704,175 @@ class Solution {
 执行结果：
 
 ![image-20200715172648254](leetcode.assets/image-20200715172648254.png)
+
+
+
+
+
+## # 37 序列化二叉树
+
+### 问题描述
+
+```Java
+请实现两个函数，分别用来序列化和反序列化二叉树。
+
+示例: 
+你可以将以下二叉树：
+
+    1
+   / \
+  2   3
+     / \
+    4   5
+
+序列化为 "[1,2,3,null,null,4,5]"
+```
+
+
+
+### 解题思路
+
+#### 广度优先遍历法（BFS）
+
+
+
+本题和《剑指 Offer》原题略有不同，这里指定了序列化后的序列。
+
+* **序列化**：观察二叉树和它的序列后发现，这个序列是按照二叉树层序来排列的。因此可以使用广度优先遍历算法来序列化二叉树；
+* **反序列化**：根据序列创建对应的结点数组，借助队列来重建二叉树。
+
+
+
+**序列化算法流程**：
+
+1. 借助 `stringbuffer` 来生成字符串序列，以字符 `,` 作为分隔符；借助 `queue` 队列来层序遍历二叉树，要求 `queue` 的实现允许添加 `null` 元素；
+2. 广度优先遍历二叉树，判断当前访问的结点 `current ==  null` 是否成立：
+   * `current == null`，`stringbuffer` 追加 `null,` 字符串，并跳过此轮循环，停止访问当前结点；
+   * `current != null`，`stringbuffer` 追加 `current.val,`，将 `current` 的左右孩子结点入队 `queue`；
+3. 遍历结束后返回 `stringbuffer` 中的字符串；
+
+
+
+**反序列化算法流程**：
+
+1. 将所给的字符串序列按照分隔符 `,` 分成代表结点值的字符串数组 `values`；
+
+2. 根据 `values` 数组创建对应的二叉树结点值的数组 `nodes`，判断当前索引 `i` 处的 `values[i] == null` 是否成立：
+
+   * `values[i] == null`，则当前结点为 `null`；
+   * `values[i] != null`，创建包含 `values[i]` 值的结点 `nodes[i]`；
+
+3. 将根结点入队 `queue`，从 `nodes[1]` 处开始，按照层序构建二叉树：
+
+   * 取队首结点到 `current`；
+
+   * 如果索引 `i < nodes.length`，则将 `current.left` 指向 `nodes[i]`，并且 `i` 加 一，否则，指向 `null`；
+   * 如果索引 `i < nodes.length`，则将 `current.right` 指向 `nodes[i]`，并且 `i` 加 一，否则，指向 `null`；
+   * 如果 `current.left` 非空，则将 `current.left` 入队；
+   * 如果 `current.right` 非空，则将 `current.right` 入队；
+
+4. 返回构建出的二叉树的根结点；
+
+
+
+**序列化算法复杂度**：
+
+* **时间复杂度O(N)**：`N` 为二叉结点数。此二叉树遍历会访问结点为空的值。再最差情况下，二叉树退化为链表，有 `N+1` 个 `null` 结点，遍历访问总次数为 `O(2N + 1)`，时间复杂度为 `O(N)`；
+* **空间复杂度O(N)**：最差情况下，二叉树为满二叉树，队列 `queue` 中存放叶子结点总数 `(N+1) / 2`，空间复杂度为 `O(N)`。
+
+
+
+**反序列化算法复杂度**：
+
+* **时间复杂度O(N)**：`N` 为二叉结点数。此二叉树遍历会访问结点为空的值。再最差情况下，二叉树退化为链表，有 `N+1` 个 `null` 结点，遍历访问总次数为 `O(2N + 1)`，时间复杂度为 `O(N)`；
+* **空间复杂度O(N)**：最差情况下，二叉树为满二叉树，队列 `queue` 中存放叶子结点总数 `(N+1) / 2`，空间复杂度为 `O(N)`。
+
+
+
+示例代码：
+
+```Java
+public class Codec {
+
+    // Encodes a tree to a single string.
+    public String serialize(TreeNode root) {
+        if (root == null) {
+            return null;
+        }
+        StringBuffer sb = new StringBuffer();
+        sb.append("[");
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        // 层序遍历二叉树，构建中序序列
+        queue.offer(root);
+        TreeNode current;
+        while (!queue.isEmpty()) {
+            current = queue.poll();
+            if (current == null) {
+                sb.append("null,");
+                // 当前结点为空，访问结束，跳过此轮循环
+                continue;
+            } else {
+                sb.append(current.val).append(",");
+            }
+            // 左右子结点依次入队
+            queue.offer(current.left);
+            queue.offer(current.right);
+        }
+       	// 删除最后一个分割符
+        sb.setCharAt(sb.length() - 1, ']');
+
+        return sb.toString();
+    }
+
+    // Decodes your encoded data to tree.
+    public TreeNode deserialize(String data) {
+        if (data == null || data.length() <= 2) {
+            return null;
+        }
+        Queue<TreeNode> queue = new LinkedList<>();
+        // 从所给的字符串序列中按照分隔符获取结点值数组
+        String[] values = data.substring(1, data.length() - 1).split(",");
+        
+        // 根据结点值数组构建二叉树结点数组 nodes
+        TreeNode[] nodes = new TreeNode[values.length];
+        for (int i = 0; i < values.length; i++) {
+            nodes[i] = "null".equals(values[i]) ?
+                    null :
+                    new TreeNode(Integer.parseInt(values[i]));
+        }
+
+        TreeNode root = nodes[0];
+        // 层序获取构建二叉树
+        queue.offer(root);
+        TreeNode current;
+        int i = 1;
+        while (!queue.isEmpty()) {
+            current = queue.poll();
+            
+            // nodes 结点数组中是否还有结点
+            current.left = i < nodes.length ?
+                    nodes[i++] :
+                    null;
+            current.right = i < nodes.length ?
+                    nodes[i++] :
+                    null;
+            
+            // 左右子结点非空就将左右子结点依次入队
+            if (current.left != null) {
+                queue.offer(current.left);
+            }
+            if (current.right != null) {
+                queue.offer(current.right);
+            }
+        }
+        // 返回二叉树根结点
+        return root;
+    }
+}
+```
+
+执行结果：
+
+![image-20200716114620200](leetcode.assets/image-20200716114620200.png)
+
