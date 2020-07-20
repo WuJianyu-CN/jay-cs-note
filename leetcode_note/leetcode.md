@@ -73,11 +73,17 @@
 
 
 
-## 2.2 算法
+## 2.2 排序
+
+### 2.2.1 前提
 
 
 
-## 复杂度速查表
+### 2.2.2 插入排序
+
+
+
+## 2.3 复杂度速查表
 
 > [常用算法复杂度速查表][https://mp.weixin.qq.com/s?__biz=MzU4ODI1MjA3NQ==&mid=2247488143&idx=1&sn=deb6c615caf298ed998e5fbf6a741540&chksm=fddec44bcaa94d5d7118f20ead2b13575c909c70e823f63145e972941da270f5f52aae95411f&mpshare=1&scene=23&srcid=0707lCkUxpO9dVnjfMOfDuMy&sharer_sharetime=1594109671836&sharer_shareid=c7673b6ffac883d6f97d3c27bcb3fc32#rd]
 
@@ -110,12 +116,6 @@
 ![03](leetcode.assets/05.png)
 
 
-
-
-
-## 2.3 排序
-
-### 2.3.1 插入排序
 
 
 

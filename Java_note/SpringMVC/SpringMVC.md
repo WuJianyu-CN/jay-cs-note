@@ -275,7 +275,7 @@ Spring MVC 原理示意图：
   * 通过 URL 映射到某个特定 `HandlerExecutionChain`。
 * `HandlerAdapter`，处理器适配器 ：
   * 根据传入的 `handler` 来定位 `Controller`。
-* ``ViewResolver` `，视图解析器：
+* `ViewResolver` ，视图解析器：
   * 解析视图。
 
 使用注解 `<mvc:annotation-driven/>` 可以配置默认的 `HanlerMapper` 和 `HandlerAdapter`。
