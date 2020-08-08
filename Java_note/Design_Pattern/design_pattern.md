@@ -1377,7 +1377,7 @@ v2 => Video{name='jayVideo', createTime=Mon Jun 29 09:29:55 CST 2020}
 
 4. `Client.java` 类：
 
-   ```
+   ```Java
    public class Client {
        public static void main(String[] args) {
            UserServiceImpl userService = new UserServiceImpl();

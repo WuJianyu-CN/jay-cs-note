@@ -28,6 +28,10 @@
 
 
 
+----
+
+
+
 # 2. 算法基础
 
 ## 2.1 位运算
@@ -130,6 +134,8 @@
 |          |      |      |
 
 
+
+----
 
 
 
@@ -5076,3 +5082,302 @@ class Solution02 {
 执行结果：
 
 ![image-20200716170957119](leetcode.assets/image-20200716170957119.png)
+
+
+
+---
+
+
+
+
+
+# 4 LeetCode 热题
+
+## # 01 两数之和
+
+### 问题描述
+
+```Java
+给定一个整数数组 nums 和一个目标值 target，请你在该数组中找出和为目标值的那 两个 整数，并返回他们的数组下标。
+
+你可以假设每种输入只会对应一个答案。但是，数组中同一个元素不能使用两遍。
+    
+
+示例:
+给定 nums = [2, 7, 11, 15], target = 9
+
+因为 nums[0] + nums[1] = 2 + 7 = 9
+所以返回 [0, 1]
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 直接法
+
+
+
+**算法流程**：
+
+1. 
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N^2)**：
+* **空间复杂度O(1)**：
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        int[] results = new int[2];
+        // 两次循环遍历数组
+        for (int i = 0; i < nums.length; i++) {
+            for (int j = i + 1; j < nums.length; j++) {
+                if (target == nums[i] + nums[j]) {
+                    results[0] = i;
+                    results[1] = j;
+                }
+            }
+        }
+        return results;
+    }
+}
+
+```
+
+执行结果：
+
+![image-20200801181509496](leetcode.assets/image-20200801181509496.png)
+
+
+
+#### 哈希表
+
+
+
+
+
+**算法流程**：
+
+1. 
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：
+* **空间复杂度O(N)**：
+
+
+
+
+
+示例代码：
+
+```Java
+class Solution02 {
+    public int[] twoSum(int[] nums, int target) {
+        int[] results = new int[2];
+        // <value, index> 快速获取某个值的索引
+        Map<Integer, Integer> map = new HashMap<>();
+		
+        // 一次遍历数组
+        for (int i = 0; i < nums.length; i++) {
+            // 如果与当前索引处的值和为 target 的值存在于 map 中，表示找到了目标索引
+            if (map.containsKey(target - nums[i])) {
+                results[0] = map.get(target - nums[i]);
+                results[1] = i;
+                break;
+            } else {
+                // 将当前值和索引加入 map
+                map.put(nums[i], i);
+            }
+        }
+        return results;
+    }
+}
+```
+
+执行结果：
+
+![image-20200801183718894](leetcode.assets/image-20200801183718894.png)
+
+
+
+## # 02 两数相加
+
+### 问题描述
+
+```Java
+给出两个 非空 的链表用来表示两个非负的整数。其中，它们各自的位数是按照 逆序 的方式存储的，并且它们的每个节点只能存储 一位 数字。
+
+如果，我们将这两个数相加起来，则会返回一个新的链表来表示它们的和。
+您可以假设除了数字 0 之外，这两个数都不会以 0 开头。
+
+示例：
+输入：(2 -> 4 -> 3) + (5 -> 6 -> 4)
+输出：7 -> 0 -> 8
+原因：342 + 465 = 807
+
+```
+
+
+
+### 解题思路
+
+
+
+#### 直接法
+
+
+
+**算法流程**：
+
+1. 
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：
+* **空间复杂度O(1)**：
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        int carry = 0;
+        ListNode head = new ListNode(0);
+        ListNode current1 = l1;
+        ListNode current2 = l2;
+        ListNode newCurrent = head;
+
+        while (current1 != null || current2 != null || carry != 0) {
+			// 取值，如果当前位置结点为空，视值为 0
+            int o1 = current1 != null ? current1.val : 0;
+            int o2 = current2 != null ? current2.val : 0;
+            int sum = o1 + o2 + carry;
+            // 记录当前位的进位
+            carry = sum > 9 ? 1 : 0;
+			
+            // 记录当前位置的值之和
+            newCurrent.next = new ListNode(sum % 10);
+			
+            // 遍历下一位
+            current1 = current1 != null ? current1.next : null;
+            current2 = current2 != null ? current2.next : null;
+            newCurrent = newCurrent.next;
+        }
+
+        return head.next;
+    }
+}
+
+```
+
+执行结果：
+
+![image-20200801185610746](leetcode.assets/image-20200801185610746.png)
+
+
+
+## # 03 无重复字符的最长字串
+
+### 问题描述
+
+```Java
+给定一个字符串，请你找出其中不含有重复字符的 最长子串 的长度。
+
+示例 1:
+输入: "abcabcbb"
+输出: 3 
+解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
+    
+示例 2:
+输入: "bbbbb"
+输出: 1
+解释: 因为无重复字符的最长子串是 "b"，所以其长度为 1。
+    
+示例 3:
+输入: "pwwkew"
+输出: 3
+解释: 因为无重复字符的最长子串是 "wke"，所以其长度为 3。
+     请注意，你的答案必须是 子串 的长度，"pwke" 是一个子序列，不是子串。
+    
+```
+
+
+
+### 解题思路
+
+
+
+#### 直接法
+
+
+
+**算法流程**：
+
+1. 
+
+
+
+**算法复杂度**：
+
+* **时间复杂度O(N)**：
+* **空间复杂度O(N)**：
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        if (s == null || s.length() == 0) {
+            return 0;
+        }
+        char[] chars = s.toCharArray();
+        // 辅助队列，字符依次入队
+        Queue<Character> queue = new LinkedList<>();
+        int result = 0;
+        int temp = 0;
+        for (char c : chars) {
+            if (queue.contains(c)) {
+                // 将 c 和之前的元素全部出队
+                while (queue.poll() != c) {
+                }
+                // 当前子字符串长度
+                temp = queue.size();
+            }
+            temp++;
+            // 重新计算最长字符串长度
+            result = Math.max(temp, result);
+            queue.offer(c);
+        }
+        return result;
+    }
+}
+```
+
+执行结果：
+
+![image-20200801191759938](leetcode.assets/image-20200801191759938.png)
+
+
+
+
+
