@@ -272,3 +272,144 @@ public void testOfferPeek2() throws InterruptedException {
 }
 ```
 
+
+
+
+
+# 3 线程池
+
+多线程实现的方式：
+
+JDK 1.5 之前，继承 Thread 类或者实现
+
+
+
+JDK 1.5 之后可通过实现 Callable 接口在实现多线程：
+
+* FutureTask 实现了 Runnable 和 Future 接口。FutureTask 构造器接收 Callable 接口的实现类。当 FutureTask 类的对象执行 start 方法时，会执行对应的 run 方法，其中会调用 Callable 实现类重写的 call 方法，返回线程执行结果。并使用 set 方法将这个结果保存到 outcome 字段中。使用者可以调用 get 方法获取这个 outcome 的值，从而获取线程执行结果。
+
+
+
+线程总结：
+
+1. Thread、Runnable、Callable 三种实现多线程；
+2. start 方法开启多线程执行 run 方法；
+3. 线程生命周期。
+
+
+
+JDK 1.5 线程池的概念。
+
+ThreadPoolExecutor 线程池具体实现类。
+
+7大参数：
+
+| 参数                              | 描述       |
+| --------------------------------- | ---------- |
+| int corePoolSize                  | 核心池大小 |
+| int maximumPoolSize               | 最大池大小 |
+| long keepAliveTime                | 存活时间   |
+| TimeUnit unit                     | 时间单位   |
+| BlockingQueue<Runnable> workQueue | 工作队列   |
+| ThreadFactory threadFactory       | 线程工厂   |
+| RejectedExecutionHandler handler  | 拒绝策略   |
+
+
+
+```Java
+/**
+     * Creates a new {@code ThreadPoolExecutor} with the given initial
+     * parameters.
+     *
+     * @param corePoolSize the number of threads to keep in the pool, even
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
+     * @param maximumPoolSize the maximum number of threads to allow in the
+     *        pool
+     * @param keepAliveTime when the number of threads is greater than
+     *        the core, this is the maximum time that excess idle threads
+     *        will wait for new tasks before terminating.
+     * @param unit the time unit for the {@code keepAliveTime} argument
+     * @param workQueue the queue to use for holding tasks before they are
+     *        executed.  This queue will hold only the {@code Runnable}
+     *        tasks submitted by the {@code execute} method.
+     * @param threadFactory the factory to use when the executor
+     *        creates a new thread
+     * @param handler the handler to use when execution is blocked
+     *        because the thread bounds and queue capacities are reached
+     * @throws IllegalArgumentException if one of the following holds:<br>
+     *         {@code corePoolSize < 0}<br>
+     *         {@code keepAliveTime < 0}<br>
+     *         {@code maximumPoolSize <= 0}<br>
+     *         {@code maximumPoolSize < corePoolSize}
+     * @throws NullPointerException if {@code workQueue}
+     *         or {@code threadFactory} or {@code handler} is null
+     */
+public ThreadPoolExecutor(int corePoolSize,
+                          int maximumPoolSize,
+                          long keepAliveTime,
+                          TimeUnit unit,
+                          BlockingQueue<Runnable> workQueue,
+                          ThreadFactory threadFactory,
+                          RejectedExecutionHandler handler) 
+```
+
+
+
+
+
+## 线程池复用机制
+
+
+
+**newSingleThreadExecutor**
+
+| 参数            | 值                  |
+| --------------- | ------------------- |
+| CorePoolSize    | 1                   |
+| MaximumPoolSize | 1                   |
+| keepAliveTime   | 0                   |
+| BlockingQueue   | LinkedBlockingQueue |
+
+**newCachedPoolSize**
+
+| 参数            | 值                |
+| --------------- | ----------------- |
+| CorePoolSize    | 0                 |
+| MaximumPoolSize | Integer.MAX_VALUE |
+| keepAliveTime   | 60 s              |
+| BlockingQueue   | SynchronousQueue  |
+
+
+
+| 参数            | 值                  |
+| --------------- | ------------------- |
+| CorePoolSize    | n                   |
+| MaximumPoolSize | n                   |
+| keepAliveTime   | 0                   |
+| BlockingQueue   | LinkedBlockingQueue |
+
+
+
+为什么阿里开发手册禁止使用 Executors？
+
+ newSingleThreadExecutor 方法只能创建包含一个核心线程的线程池，其余的线程都会在无界的 workQueue 中排队等待，当线程数过多时可能会造成 OOM；
+
+newCachedThreadExecutor 方法创建线程池时，核心线程数为 0，而 workQueue 的实现方式为同步队列。设置的生存时间为 60 秒，排队的空闲线程超出 60 秒后便会销毁，可能会不符合业务要求；
+
+newFixThreadPool 设置固定大小的线程池，超出核心线程池大小的其余的线程都会在无界的 workQueue 中排队等待，当线程数过多时可能会造成 OOM；
+
+
+
+RejectedExecutionException 拒绝策略
+
+| 拒绝策略                               | 描述                                                |
+| -------------------------------------- | --------------------------------------------------- |
+| ThreadPoolExecutor.AbortPolicy         | 默认策略，丢弃任务并抛出 RejectedExecutionException |
+| ThreadPoolExecutor.DiscardPolicy       | 丢弃任务，但是不抛出异常                            |
+| ThreadPoolExecutor.DiscardOldestPolicy | 丢弃队列最前端的任务，然后重新尝试执行任务          |
+| ThreadPoolExecutor.CallerRunsPolicy    | 由调用线程处理该任务                                |
+| 自定义拒绝策略                         | 实现 RejectedExecutionHandler 即可自定义            |
+
+
+
+线程池 4 级

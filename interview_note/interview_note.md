@@ -150,7 +150,15 @@ private static final long serialVersionUID = 0L;
 
 ### Java 线程有哪些状态？
 
+NEW
 
+RUNNABLE
+
+WAIT
+
+BLOCKED
+
+TERMINATED
 
 ### Java 是怎么进行线程通信的？
 
@@ -174,15 +182,72 @@ private static final long serialVersionUID = 0L;
 
 
 
-### 多线程构建的几个参数？会怎么样？
-
-
-
 ### 回退机制
 
 
 
 ### 线程池，七大参数，具体使用流程，底层怎么实现的？
+
+ThreadPoolExecutor
+
+**七大参数：**
+
+| ThreadPoolExecutor 参数           | 描述           |
+| --------------------------------- | -------------- |
+| int corePoolSize                  | 核心池大小     |
+| int maxPoolSize                   | 最大池大小     |
+| long keepAliveTime                | 生存时间       |
+| TimeUnit unit                     | 生存时间的单位 |
+| BlockingQueue<Runnable> workQueue | 任务的工作队列 |
+| ThreadFactory threadFactory       | 线程工厂       |
+| RejectedExecutionHandler handler  | 拒绝策略处理器 |
+
+
+
+**线程池工作流程：**
+
+1. 用户使用线程池 execute 或 submit 方法提交任务 T；
+2. 创建 Worker 对象，Worker 对象存放一个工作线程，构造 Worker 时将自身作为 Runnable 任务传递给这个线程。使用 addWorker 添加到 Worker 组中；
+3. 启动 Worker 中的 Thread 对象；
+4. 运行 worker 的 run 方法中的 runWoker 方法获取任务 T；
+5. 启动任务 T；
+6. 启动完毕后执行 processWorkerExit 按照要求回收 worker。
+
+
+
+**执行 addWorker 的选择过程**：
+
+1. 当前Worker数小于corePoolSize时，说明活动线程数没有达到允许的核心线程数上限，此时调用addWorker()方法。注意此时方法的第二个参数是true，代表本次添加Worker的前提是活动线程数不超过corePoolSize。
+2. 当前Worker数大于corePoolSize时，判断线程池是否是RUNNING状态，然后试图向workQueue中添加任务。添加任务成功后需要进行二次检查，如果线程池状态不是RUNNING则从workQueue中删除刚刚添加的任务，并且执行拒绝策略，另外如果活动线程为0则可以调用addWorker()方法新增一个无任务的Worker。
+3. 如果来到这一步，也就是Worker数大于corePoolSize，而且向workQueue中添加任务失败，则再次执行addWorker()方法。和第一步不同，此时调用addWorker()方法的第二个参数是false，代表本次添加Worker的前提是线程数不超过maximumPoolSize。这意味着这一步把线程池中的活动线程上限从corePoolSize提高到了maximumPoolSize。如果此时添加Worker失败，则执行拒绝策略。
+
+
+
+```Java
+int c = ctl.get();
+if (workerCountOf(c) < corePoolSize) {
+    if (addWorker(command, true))
+        return;
+    c = ctl.get();
+}
+if (isRunning(c) && workQueue.offer(command)) {
+    int recheck = ctl.get();
+    if (! isRunning(recheck) && remove(command))
+        reject(command);
+    else if (workerCountOf(recheck) == 0)
+        addWorker(null, false);
+}
+else if (!addWorker(command, false))
+    reject(command);
+```
+
+**继承关系**
+
+ThreadPoolExecutor --> AbstractExecutorService --> ExecutorService --> Executor
+
+
+
+![image-20200811102640296](interview_note.assets/image-20200811102640296.png)
 
 
 
@@ -196,21 +261,183 @@ private static final long serialVersionUID = 0L;
 
 ## JVM
 
-### JVM 垃圾回收算法和垃圾回收器介绍
+
+
+### JVM 怎么定位垃圾？
+
+如果采取引用计数法，可能会出现循环引用问题。
+
+HotSpot 定位垃圾的方式是：根可达算法。
+
+GC roots ：
+
+1. 虚拟机栈中引用的对象，如方法里的变量和参数；
+2. 本地方法栈引用的对象；
+3. 方法区中类的常量/静态变量引用的对象；
+4. 活着的线程 Alive/Thread；
+5. 用于同步的监控对象 Monitor。
 
 
 
-### 介绍一下 CMS
+### JVM 垃圾回收算法
+
+**标记清除算法（Mark-Sweep）**
+
+用根可达算法来标记存活对象和可回收对象，垃圾回收器工作使会清除可回收对象。这种算法可能会产生内存碎片。
+
+**复制回收算法（Copying）**
+
+将内存区域一分为二，回收时将标记存活的对象复制到另一部分的空内存区域，之后再清空当前部分内存区域。
+
+这种算法避免了内存碎片的产生，但是有内存的浪费。
+
+**标记整理（标记压缩）算法（Mark-Compact）**
+
+标记存活对象和可回收对象，回收后，将存活的对象移动到连续的内存中。
+
+多线程进行内存移动，需要同步加锁，效率低。
 
 
+
+### JVM 分代算法
+
+堆空间的划分：
+
+**新生代（young）**
+
+* 垃圾多，存活对象少；
+* Copy 算法，效率高
+
+**老年代（old）**
+
+* 垃圾少，存活对象多；
+* 一般推荐 Mark-Compact
+* CMS 采用 Mark-Sweep
+* G1 采用 Copying
+
+分代模型适用于部分垃圾回收器：
+
+JDK 1.7 永久代， JDK 1.8 元数据区（元空间）的区别：
+
+1. 永久代必须只当大小限制，元数据可以限制，也可以不限制（受限物理内存）；
+2. 字符串常量 JDK 1.7 永久代， JDK 1.8 在堆中。
+
+### JVM 垃圾回收过程
+
+除了 JVM，系统中还有其他的应用程序需要占用内存。JVM 需要在有限的空间做更多的事情，就需要进行性能调优。对象（大对象除外，直接进入老年代）在 Eden 区创建，当 Eden 的空间占用过多时，会触发 Minor GC（**复制回收算法**），进行可达性分析。如果对象不被引用，就会撤销对象，如果被引用就会将此对象移动到 Survivor from 区，增加它的分代年龄 age。之后交换 Surviaor from 区和 Survivor to 区。
+
+如果一个对象的 age = 15，JVM 会将此对象加入老年代。当老年代的内存满了时，会触发 Full GC。导致STW stop the world，会停止服务。
+
+
+
+### JVM 垃圾回收器介绍
+
+
+
+|        | 单线程     | 多线程                    |
+| ------ | ---------- | ------------------------- |
+| 新生代 | Serial     | Parallel Scavenge，ParNew |
+| 老年代 | Serial Old | Parallel Old，CMS         |
+
+不分代的有 G1，ZGC等
+
+
+
+某个用户，购物-下单（0.5S）
+
+JVM Full GC STW（10s） 用户最大响应时间很大，不友好。
+
+
+
+### CMS 垃圾回收器
+
+CMS 垃圾回收器关注用户响应时间
+
+CMS：ConcurrentMarkSweep 算法：标记清除算法。
+
+
+
+JDK 1.8 默认使用 Parallel Scavenge 和 Parallel Old，因为它们更加关注吞吐量。如果关注用户响应时间可以使用 CMS。
+
+CMS 怎么减少 STM，提高用户体验？
+
+CMS的标记过程分为三次：
+
+1. 初始标记：标记 GC roots 引用的对象，STW 时间很短；
+2. 并发标记：多线程并发标记所有引用链路，工作线程不会停止运行，无 STW 时间；
+3. 重复标记：重复标记在并发标记时工作线程产生的额外对象，STW 时间很短。
+
+CMS的并发清理：清理标记过的对象，不影响工作线程的运行，清理结束后重置线程继续工作。
+
+
+
+CMS 的优点：
+
+* STW 时间短；
+* 响应比高。
+
+CMS 的缺点：
+
+* CPU 敏感 多线程 == （CPU 核心数 + 3）/ 4
+* 产生内存碎片
+* 并发清理时工作线程会产生浮动垃圾对象，这些对象只能在一次清理时才能清理，因此老年代需要设置清理阈值。
+
+JDK 1.5 及之前的阈值为 68%，JDK 1.6升级为 92%。如果剩余的 8% 不够存放浮动垃圾对象就会触发一次 Serial old 单线程清理，出现长时间的 STW。
 
 ### 类加载器过程
+
+**加载**
+
+* 获取类的二进制字节流
+* 将静态结构转化为方法区运行时数据结构
+* 内存中生成类对象，作为数据入口
+
+**验证**
+
+* 文件格式，元数据，字节码和符号引用等验证
+
+**准备**
+
+* 初始化类结构变量
+
+**初始化**
+
+* 执行类构造器<clinit>()
+
+**卸载**
+
+
+
+### Java 对象创建过程
 
 
 
 ### 双亲委托机制原理，常用场景
 
+当某个类加载器需要加载某个`.class`文件时，它首先把这个任务委托给他的上级类加载器，递归这个操作，如果上级的类加载器没有加载，自己才会去加载这个类。
 
+**类加载器的类别**
+
+**BootstrapClassLoader（启动类加载器）**
+
+`c++`编写，加载`java`核心库 `java.*`,构造`ExtClassLoader`和`AppClassLoader`。由于引导类加载器涉及到虚拟机本地实现细节，开发者无法直接获取到启动类加载器的引用，所以不允许直接通过引用进行操作
+
+**ExtClassLoader （标准扩展类加载器）**
+
+`java`编写，加载扩展库，如`classpath`中的`jre` ，`javax.*`或者
+ `java.ext.dir` 指定位置中的类，开发者可以直接使用标准扩展类加载器。
+
+**AppClassLoader（系统类加载器）**
+
+`java`编写，加载程序所在的目录，如`user.dir`所在的位置的`class`
+
+**CustomClassLoader（用户自定义类加载器）**
+
+`java`编写,用户自定义的类加载器,可加载指定路径的`class`文件
+
+
+
+选择 JDBC 驱动，选择日志实现。  
 
 ### semaphore 原理和使用
 
