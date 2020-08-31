@@ -33,10 +33,22 @@
 
 
 
+### static的类能不能被继承
+
+
+
+### static修饰的方法不能被重写可以被继承
+
+> [static修饰的方法不能被重写可以被继承](https://www.cnblogs.com/whoknows1/p/9981755.html)
+
+静态的方法可以被继承，但是不能重写。如果父类中有一个静态的方法，子类也有一个与其方法名，参数类型，参数个数都一样的方法，并且也有static关键字修饰，那么该子类的方法会把原来继承过来的父类的方法隐藏，而不是重写。通俗的讲就是父类的方法和子类的方法是两个没有关系的方法，具体调用哪一个方法是看是哪个对象的引用；这种父子类方法不在存在多态的性质。
+
+
+
 ### ArrayList 扩容机制
 
 1. 如果使用默认无参构造方法 `ArrayList()`，`ArrayList` 的初始容量为 `10`，但实际上用了参数 `DEFAULTCAPACITY_EMPTY_ELEMENTDATA` 返回了一个空的数组。因此第一次添加数据时，`minCapacity` 等于默认的容量 `10`，数据扩容至 `10`，而后续的数组扩容才是按照当前容量的 `1.5` 倍进行扩容；
-2. 如果扩容后的总长度溢出，抛出异常，如果扩容后的总长度小于等于数组定义的最大值 `MAX_ARRAY_LENGTH = Integer.MAX_VALUE - 8;`  ，否则返回最大整数值。
+2. 如果扩容后的总长度溢出，抛出异常，如果扩容后的总长度小于等于数组定义的最大值，则 `MAX_ARRAY_LENGTH = Integer.MAX_VALUE - 8;`  ，否则返回最大整数值。
 
 
 
@@ -164,15 +176,167 @@ TERMINATED
 
 
 
+### 线程并发安全问题
+
+多线程编程中，有可能会出现多个线程同时访问同一个共享、可变资源。这种资源可能是：对象，变量和文件等。由于线程执行的过程是不可控的，会产生线程安全问题。
+
+* 共享：资源可以由多个线程同时访问；
+
+* 可变：资源可以在其生命周期内被修改；
+
+
+
+如何解决？ 加锁访问共享资源：
+
+1. JVM 内置锁：synchronized
+2. AQS lock
+
+
+
+所有的并发模式在解决线程安全问题时，采用的方案都是序列化访问临界资源。即在同一时刻，只能有一个线程访问临界资源，也称作同步互斥访问。
+
+
+
+
+
+### Java 并发编程体系
+
+* locks 部分：显式锁（互斥锁和读写锁）相关；
+* atomic 部分：原子变量类相关，是构建非阻塞算法的基础；
+* executor 部分：线程池相关；
+* collections 部分：并发容器相关；
+* tools 部分：同步工具相关，如信号量，闭锁，栅栏等功能。
+
 ### Java 内存模型与 volatile 关键字，如何禁止重排序的
 
 
 
 ### Java 里面有什么锁
 
+Synchronized 和 Lock（ReentrantLock）
 
+### 介绍一下 AQS
+
+基于 AQS 达到线程访问资源同步；
+
+> [Java技术之AQS详解](https://www.jianshu.com/p/da9d051dcc3d)
+>
+> [Java并发之AQS详解](https://www.cnblogs.com/waterystone/p/4920797.html)
+>
+> [Java并发之AQS全面详解](https://zhuanlan.zhihu.com/p/91949778)
+
+
+
+**acquire() 方法**
+
+```java
+public final void acquire(int arg) {
+    if (!tryAcquire(arg) &&
+        acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+        selfInterrupt();
+}
+```
+
+流程：
+
+1. 调用自定义同步器的tryAcquire()尝试直接去获取资源，如果成功则直接返回；
+2. 没成功，则addWaiter()将该线程加入等待队列的尾部，并标记为独占模式；
+3. acquireQueued()使线程在等待队列中休息，有机会时（轮到自己，会被unpark()）会去尝试获取资源。获取到资源后才返回。如果在整个等待过程中被中断过，则返回true，否则返回false。
+4. 如果线程在等待过程中被中断过，它是不响应的。只是获取资源后才再进行自我中断selfInterrupt()，将中断补上。
+
+
+
+![img](interview_note.assets/721070-20151102145743461-623794326.png)
+
+
+
+![img](interview_note.assets/v2-36fff0c4ca95dc4ad057276f57d1b65c_720w.jpg)
+
+
+
+**release() 方法**
+
+``` Java
+public final boolean release(int arg) {
+    if (tryRelease(arg)) {
+        Node h = head;//找到头结点
+        if (h != null && h.waitStatus != 0)
+            unparkSuccessor(h);//唤醒等待队列里的下一个线程
+        return true;
+    }
+    return false;
+}
+```
+
+**它是根据tryRelease()的返回值来判断该线程是否已经完成释放掉资源了！所以自定义同步器在设计tryRelease()的时候要明确这一点！！**
+
+**tryRelease(int)**
+
+　　此方法尝试去释放指定量的资源。下面是tryRelease()的源码：
+
+```Java
+protected boolean tryRelease(int arg) {
+    throw new UnsupportedOperationException();
+}
+```
+
+ 
+
+　　跟tryAcquire()一样，这个方法是需要独占模式的自定义同步器去实现的。正常来说，tryRelease()都会成功的，因为这是独占模式，该线程来释放资源，那么它肯定已经拿到独占资源了，直接减掉相应量的资源即可(state-=arg)，也不需要考虑线程安全的问题。但要注意它的返回值，上面已经提到了，**release()是根据tryRelease()的返回值来判断该线程是否已经完成释放掉资源了！**所以自义定同步器在实现时，如果已经彻底释放资源(state=0)，要返回true，否则返回false。
+
+**unparkSuccessor(Node)**
+
+　　此方法用于唤醒等待队列中下一个线程。下面是源码：
+
+```Java
+private void unparkSuccessor(Node node) {
+    //这里，node一般为当前线程所在的结点。
+    int ws = node.waitStatus;
+    if (ws < 0)//置零当前线程所在的结点状态，允许失败。
+        compareAndSetWaitStatus(node, ws, 0);
+
+    Node s = node.next;//找到下一个需要唤醒的结点s
+    if (s == null || s.waitStatus > 0) {//如果为空或已取消
+        s = null;
+        for (Node t = tail; t != null && t != node; t = t.prev) // 从后向前找。
+            if (t.waitStatus <= 0)//从这里可以看出，<=0的结点，都是还有效的结点。
+                s = t;
+    }
+    if (s != null)
+        LockSupport.unpark(s.thread);//唤醒
+}
+```
+
+
+
+　　这个函数并不复杂。一句话概括：**用unpark()唤醒等待队列中最前边的那个未放弃线程**，这里我们也用s来表示吧。此时，再和acquireQueued()联系起来，s被唤醒后，进入if (p == head && tryAcquire(arg))的判断（即使p!=head也没关系，它会再进入shouldParkAfterFailedAcquire()寻找一个安全点。这里既然s已经是等待队列中最前边的那个未放弃线程了，那么通过shouldParkAfterFailedAcquire()的调整，s也必然会跑到head的next结点，下一次自旋p==head就成立啦），然后s把自己设置成head标杆结点，表示自己已经获取到资源了，acquire()也返回了！！And then, DO what you WANT!
+
+
+
+**acquireShared()** 方法的流程：
+
+1. tryAcquireShared()尝试获取资源，成功则直接返回；
+2. 失败则通过doAcquireShared()进入等待队列park()，直到被unpark()/interrupt()并成功获取到资源才返回。整个等待过程也是忽略中断的。
+
+其实跟acquire()的流程大同小异，只不过多了个**自己拿到资源后，还会去唤醒后继队友的操作（这才是共享嘛）**。
+
+
+
+**releaseShared()** 方法：
+
+释放掉资源后，唤醒后继。跟独占模式下的release()相似，但有一点稍微需要注意：独占模式下的tryRelease()在完全释放掉资源（state=0）后，才会返回true去唤醒其他线程，这主要是基于独占下可重入的考量；而**共享模式下的releaseShared()则没有这种要求，共享模式实质就是控制一定量的线程并发执行，那么拥有资源的线程在释放掉部分资源时就可以唤醒后继等待结点。**例如，资源总量是13，A（5）和B（7）分别获取到资源并发运行，C（4）来时只剩1个资源就需要等待。A在运行过程中释放掉2个资源量，然后tryReleaseShared(2)返回true唤醒C，C一看只有3个仍不够继续等待；随后B又释放2个，tryReleaseShared(2)返回true唤醒C，C一看有5个够自己用了，然后C就可以跟A和B一起运行。而ReentrantReadWriteLock读锁的tryReleaseShared()只有在完全释放掉资源（state=0）才返回true，所以自定义同步器可以根据需要决定tryReleaseShared()的返回值。
+
+### 获取不到锁时，AQS 阻塞的具体流程
+
+`acquireQueued()` 方法的具体流程：
+
+1. 结点进入队尾后，检查状态，找到安全休息点；
+2. 调用park()进入waiting 状态，等待unpark()或interrupt()唤醒自己；
+3. 被唤醒后，看自己是不是有资格能拿到锁。如果拿到，head指向当前结点，并返回从入队到拿到号的整个过程中是否被中断过；如果没拿到，继续流程1。
 
 ### ConcurrentHashMap 采用了红黑树，为什么一定要使用红黑树而不是 AVL、B数之类的？
+
+> [ConcurrentHashMap与红黑树实现分析Java8](https://www.jianshu.com/p/b7dda385f83d)
 
 在 CurrentHashMap 中是加锁了的，实际上是读写锁，如果写冲突就会等待，如果插入时间过长必然等待时间更长，而红黑树相对 AVL 树 B 树的插入更快，AVL 树查询确实更快一些，但是对于操作密集型，红黑树的旋转更少，效率更高。
 
@@ -183,6 +347,24 @@ TERMINATED
 
 
 ### 回退机制
+
+
+
+### ThreadLocal
+
+> [ThreadLocal-面试必问深度解析](https://www.jianshu.com/p/98b68c97df9b)
+
+threadlocal里面使用了一个存在弱引用的map,当释放掉threadlocal的强引用以后,map里面的value却没有被回收.而这块value永远不会被访问到了. 所以存在着内存泄露. 最好的做法是将调用threadlocal的remove方法.
+
+　　在threadlocal的生命周期中,都存在这些引用. 看下图: 实线代表强引用,虚线代表弱引用.
+
+　　![img](interview_note.assets/172259164557.jpg)
+
+　　每个thread中都存在一个map, map的类型是ThreadLocal.ThreadLocalMap. Map中的key为一个threadlocal实例. 这个Map的确使用了弱引用,不过弱引用只是针对key. 每个key都弱引用指向threadlocal. 当把threadlocal实例置为null以后,没有任何强引用指向threadlocal实例,所以threadlocal将会被gc回收. 但是,我们的value却不能回收,因为存在一条从current thread连接过来的强引用. 只有当前thread结束以后, current thread就不会存在栈中,强引用断开, Current Thread, Map, value将全部被GC回收.
+
+　　所以得出一个结论就是只要这个线程对象被gc回收，就不会出现内存泄露，但在threadLocal设为null和线程结束这段时间不会被回收的，就发生了我们认为的内存泄露。其实这是一个对概念理解的不一致，也没什么好争论的。最要命的是线程对象不被回收的情况，这就发生了真正意义上的内存泄露。比如使用线程池的时候，线程结束是不会销毁的，会再次使用的。就可能出现内存泄露。　　
+
+　　PS.Java为了最小化减少内存泄露的可能性和影响，在ThreadLocal的get,set的时候都会清除线程Map里所有key为null的value。所以最怕的情况就是，threadLocal对象设null了，开始发生“内存泄露”，然后使用线程池，这个线程结束，线程放回线程池中不销毁，这个线程一直不被使用，或者分配使用了又不再调用get,set方法，那么这个期间就会发生真正的内存泄露。
 
 
 
@@ -251,11 +433,7 @@ ThreadPoolExecutor --> AbstractExecutorService --> ExecutorService --> Executor
 
 
 
-### 介绍一下 AQS
 
-
-
-### 获取不到锁时，AQS 阻塞的具体流程
 
 
 
@@ -330,9 +508,11 @@ JDK 1.7 永久代， JDK 1.8 元数据区（元空间）的区别：
 
 
 
+### 为什么新生代内存需要有两个Survivor区
+
+> [为什么新生代内存需要有两个Survivor区](https://blog.csdn.net/antony9118/article/details/51425581)
+
 ### JVM 垃圾回收器介绍
-
-
 
 |        | 单线程     | 多线程                    |
 | ------ | ---------- | ------------------------- |
@@ -437,7 +617,7 @@ JDK 1.5 及之前的阈值为 68%，JDK 1.6升级为 92%。如果剩余的 8% �
 
 
 
-选择 JDBC 驱动，选择日志实现。  
+选择日志实现。  
 
 ### semaphore 原理和使用
 
@@ -466,8 +646,6 @@ JDK 1.5 及之前的阈值为 68%，JDK 1.6升级为 92%。如果剩余的 8% �
 
 
 ### Spring 设置事务隔离级别与数据库不一致，会怎么样？
-
-
 
 
 
@@ -504,6 +682,17 @@ JDK 1.5 及之前的阈值为 68%，JDK 1.6升级为 92%。如果剩余的 8% �
 代理模式
 
 
+
+### 代理模式和装饰器模式的区别
+
+使用代理模式，代理和真实对象之间的的关系通常在编译时就已经确定了，而装饰者能够在运行时递归地被构造.这种理解是有偏差的。
+
+模式区别除了实现外，最重要的是模式的目的性。代理模式与装饰器模式最根本区别是两者的目的不同，而不在具体的实现差异。
+
+
+
+代理和装饰其实从另一种角度更容易去理解这两个模式的区别：
+代理更多的是强调控制对对象的访问，比如说：访问A对象的查询功能时，访问B对象的更新功能时，访问C对象的删除功能时都需要判断用户是否登录，那么我需要将判断用户是否登录功能抽出来，并对A对象，B对象，C对象进行代理使访问它们时都需要去判断用户是否登录，简单说就是将某个控制访问权限应用到多个对象上；而装饰更多的强调现在我要给A对象增加唱歌功能，跳舞功能，说唱功能等等，简单说就是讲多个功能附加在一个对象上；
 
 ---
 
@@ -547,6 +736,17 @@ RTT = 2
 **LTS 1.3 版本：** RTT = 1
 
 浏览器 **Client** 第一次就把自己的密钥交换 （**Key Exchange**） 的素材发给服务器 **Server**。
+
+
+
+### TCP 有哪些计时器
+
+每个连接。TCP管理4个不用的定时器
+
+1. 重传定时器，使用于当希望收到另一端的确认。
+2. 坚持定时器，使窗口大小信息保持不断流动，即使另一端关闭了其接收窗口
+3. 保活定时器，检测到一个空闲连接的另一端何时崩溃或重启
+4. 2MSL定时器，测量一个连接处于TIME_WAIT状态的时间
 
 
 
@@ -646,6 +846,12 @@ Keep Alive指定连接最大空闲时间T，当客户端检测到连接空闲时
 
 
 
+### TCP Flood 攻击
+
+> [DDoS攻击--Syn_Flood攻击防护详解(TCP)](https://blog.csdn.net/qq_34777600/article/details/81946514)
+
+
+
 ### TCP 和 UDP 的区别
 
 | TCP              | UDP             |
@@ -740,6 +946,28 @@ UDP 报文格式
 
 
 
+### HTTP 缓存
+
+根据是否需要向服务器重新发起HTTP请求将缓存过程分为两个部分，分别是**强制缓存**和**协商缓存** 。
+
+**强制缓存**
+
+**强制缓存就是向浏览器缓存查找该请求结果，并根据该结果的缓存规则来决定是否使用该缓存结果的过程**
+
+**控制强制缓存的字段分别是Expires和Cache-Control**，其中Cache-Conctrol的优先级比Expires高。
+
+**协商缓存**
+
+**协商缓存就是强制缓存失效后，浏览器携带缓存标识向服务器发起请求，由服务器根据缓存标识决定是否使用缓存的过程**
+
+协商缓存的标识也是在响应报文的HTTP头中和请求结果一起返回给浏览器的，控制协商缓存的字段分别有：**Last-Modified / If-Modified-Since和Etag / If-None-Match**，其中Etag / If-None-Match的优先级比Last-Modified / If-Modified-Since高。
+
+
+
+强制缓存优先于协商缓存进行，若强制缓存(Expires和Cache-Control)生效则直接使用缓存，若不生效则进行协商缓存(Last-Modified / If-Modified-Since和Etag / If-None-Match)，协商缓存由服务器决定是否使用缓存，若协商缓存失效，那么代表该请求的缓存失效，重新获取请求结果，再存入浏览器缓存中；生效则返回304，继续使用缓存，主要过程如下：
+
+
+
 ### HTTP 1.1/2/3
 
 
@@ -752,7 +980,7 @@ UDP 报文格式
 
 
 
-### HTTP 如果当前有一个长链接，但是我们想给用户一个短链接，如何实现
+### HTTP 如果当前有一个长链接  ，但是我们想给用户一个短链接，如何实现
 
 
 
@@ -815,9 +1043,17 @@ MySQL 引擎在物理文件上的区别：
 
 
 
+### Hash索引
+
+所谓Hash索引，当我们要给某张表某列增加索引时，将这张表的这一列进行哈希算法计算，得到哈希值，排序在哈希数组上。所以Hash索引可以一次定位，其效率很高，而Btree索引需要经过多次的磁盘IO，但是innodb和myisam之所以没有采用它，是因为它存在着好多缺点：
+
+1. 因为Hash索引比较的是经过Hash计算的值，所以只能进行等式比较，不能用于范围查询
+2. 每次都要全表扫描
+3. 由于哈希值是按照顺序排列的，但是哈希值映射的真正数据在哈希表中就不一定按照顺序排列，所以无法利用Hash索引来加速任何排序操作
+4. 不能用部分索引键来搜索，因为组合索引在计算哈希值的时候是一起计算的。
+5. 当哈希值大量重复且数据量非常大时，其检索效率并没有Btree索引高的。
+
 ### 外键
-
-
 
 ```mysql
 CREATE TABLE IF NOT EXISTS `student` (
@@ -839,13 +1075,67 @@ CREATE TABLE IF NOT EXISTS `student` (
 
 ### MySQL 有哪些索引？底层数据结构是什么？
 
+聚集索引
 
+* 索引的逻辑顺序跟数据的物理顺序一致。
+* 一张表中只有一个索引能够决定数据的物理顺序；
+* 一张表必须有一个聚集索引来；
+
+
+
+聚集索引：
+
+1. primary key；
+2. unique key -- no null；
+3. 隐藏字段 _rowid，查询时会锁定所有 _rowid，导致整个表都被锁定。
+
+
+
+MySQL数据库中innodb存储引擎，B+树索引可以分为聚簇索引（也称聚集索引，clustered index）和辅助索引（有时也称非聚簇索引或二级索引，secondary index，non-clustered index）。这两种索引内部都是B+树，聚集索引的叶子节点存放着一整行的数据。
+
+
+
+ 唯一索引 `name` 和 主键 `id` 有什么区别？
+
+除了主键的索引都叫做辅助索引。
+
+主键索引：存储索引和数据；
+
+辅助索引：存储索引和主键值
+
+辅助索引的查询需要多扫描一课索引树，效率相对更低。
 
 ### 设计一张表，哪些属性用聚簇索引，哪些用非聚簇索引？
 
+| 动作描述           | 使用聚集索引 | 使用非聚集索引 |
+| ------------------ | ------------ | -------------- |
+| 列经常被分组排序   | 应           | 应             |
+| 返回某范围内的数据 | 应           | 不应           |
+| 一个或极少不同值   | 不应         | 不应           |
+| 小数目的不同值     | 应           | 不应           |
+| 大数目的不同值     | 不应         | 应             |
+| 频繁更新的列       | 不应         | 应             |
+| 外键列             | 应           | 应             |
+| 主键列             | 应           | 应             |
+| 频繁修改索引列     | 不应         | 应             |
 
 
-### MySQL 索引最左前缀匹配
+
+
+
+### MySQL 联合索引最左前缀匹配
+
+B+ 数是排好序的数据结构，联合索引从左到右为依据开始对索引排序。在查询时应该从索引中最左侧开始匹配。
+
+```mysql
+KEY `idx_name_age_position` (`name`, `age`, `position`) USING BTREE
+-- 最左匹配
+EXPLAIN SELECT * FROM exployees WHERE name = 'Bill' AND age = 31;
+EXPLAIN SELECT * FROM exployees WHERE name = 'Bill' AND position = 'manager';
+
+-- 查询优化 全值匹配
+EXPLAIN SELECT * FROM exployees WHERE age = 31 AND positon = 'dev' AND name = 'Bill';
+```
 
 
 
@@ -859,7 +1149,7 @@ delete 和 truncate 只删除表的数据不删除表的结构；
 
 delete 语句是 dml，这个操作会放到 rollback segment 中，事务提交之后才生效，如果有相应的 trigger，执行的时候将被触发；
 
-truncate 和 drop 是 ddl，操作立即生效，原数据不妨到 rollback segment 中，不能回滚，操作不触发 trigger；
+truncate 和 drop 是 ddl，操作立即生效，原数据不放到 rollback segment 中，不能回滚，操作不触发 trigger；
 
 
 
@@ -895,16 +1185,128 @@ truncate 和 drop 是 ddl，操作立即生效，原数据不妨到 rollback seg
 
 
 
-### 隔离级别？解决了哪些问题？
+### 隔离级别？解决了哪些问题？怎么实现的？
 
 SQL 标准定义了四个隔离级别：
 
-* **READ-UNCOMMITTED（读取未提交）**：最低的隔离级别，允许读取尚未提交的数据变更，可能会导致脏读、幻读或者不可重复读；
-* **READ-COMMITTED（读取已提交）**：允许读取并发事务已经提交的数据，可以阻止脏读，但是幻读或不可重复度仍有可能发生；
-* **REPEATABLE-READ（可重复读）**：对同一字段的多次读取结果都是一致的，除非数据是被事务本身修改的，可以组织脏读和不可重复读，但幻读仍有可能发生；
-* **SERIALIZABLE（可串行化）**：最高的隔离级别，完全服从 ACID 的隔离级别。所有的事务依次逐个执行，这样事务之间就完全不可能产生干扰，也就是说，该级别可以防止脏读、不可重复读以及幻读。
+* **READ-UNCOMMITTED（读取未提交）**：最低的隔离级别，允许读取尚未提交的数据变更，可能会导致脏读、幻读或者不可重复读；`READ UNCOMMITTED` 隔离级别下, 读不会加任何锁。而写会加排他锁，并到事务结束之后释放。
+* **READ-COMMITTED（读取已提交）**：允许读取并发事务已经提交的数据，可以阻止脏读，但是幻读或不可重复度仍有可能发生；InnoDB在该隔离级别(READ COMMITTED)写数据时，使用排它锁, 读取数据不加锁而是使用了MVCC机制。
+* **REPEATABLE-READ（可重复读）**：对同一字段的多次读取结果都是一致的，除非数据是被事务本身修改的，可以组织脏读和不可重复读，但幻读仍有可能发生；READ COMMITTED级别不同的是**MVCC版本的生成时机**，即：一次事务中只在**第一次select**时生成版本，后续的查询都是在这个版本上进行，从而实现了**可重复读**。
+* **SERIALIZABLE（可串行化）**：最高的隔离级别，完全服从 ACID 的隔离级别。所有的事务依次逐个执行，这样事务之间就完全不可能产生干扰，也就是说，该级别可以防止脏读、不可重复读以及幻读。该级别下，会自动将所有普通`select`转化为`select ... lock in share mode`执行，即针对同一数据的所有读写都变成互斥的了，可靠性大大提高，并发性大大降低。
 
 
+
+### 事务隔离级别的解决方案
+
+事务日志 undo log
+
+
+
+LBCC（Lock Based Concurrency Control）：在读取数据前，对其加锁，阻止其他事务对数据进行修改；
+
+
+
+MVCC（Multi Version Concurrency Control）：生成一个数据请求时间点的一致性数据快照（Snapshot），并用这个快照来提供一定级别（语句级或事务级）的一致性读取；
+
+* 事务编号是递增，一个事务只能看到它之前的事务提交后的数据库快照。
+
+### InnoDB 的锁机制原理是什么？
+
+锁的作用是什么？
+
+* 为了解决资源竞争的问题。
+
+
+
+粒度：
+
+* 行锁
+* 表锁
+
+用法：
+
+* 乐观锁：
+* 悲观锁
+
+类型和基本模式：
+
+* 共享锁
+* 排他锁
+* 意向锁
+* 自增锁
+
+锁的算法：
+
+* 记录锁 Record Lock
+* 间隙锁 Gap Lock
+* 临键锁 Next-Key Lock
+* 插入意向锁
+
+
+
+表锁与行锁的区别：
+
+锁定粒度：表锁 > 行锁
+
+加锁效率：表锁 > 行锁
+
+冲突概率：表锁 > 行锁
+
+并发性能：表锁 < 行锁
+
+
+
+**MySQL InnoDB 锁的类型**
+
+锁的模式 Lock Mode：
+
+* 共享锁（行锁）：Shared Lock（S），又称为读锁，顾名思义，共享锁就是多个事务对于同一个数据可以共享一把锁，都能访问到数据，但是只能读甭能修改；
+
+  ```sql
+  -- 加锁方式
+  select * from student where id = 1 lock in share mode;
+  -- 释放锁
+  commit / rollback;
+  ```
+
+* 排他锁（行锁）：Exclusive Lock（X），又称为写锁，排他锁不能与其它锁并存，如果一个事务获取了一个数据行的排他锁，其他事务就不能再获取该行的锁（共享锁、排他锁），只有该获取了排他锁的事务是可以对数据行进行读取和修改。
+
+  ```sql
+  -- 加锁释锁方式
+  自动: delete / update / insert 默认加上 X 锁
+  手动: select * form student where id = 1 for update;
+  ```
+
+  
+
+* 意向共享锁（表锁）：Intention Shared Lock（IS），表示事务准备给数据行加入共享锁，也就是说一个数据行加锁前必须先取得该表的 IS 锁。
+
+* 意向排他锁（表锁）：Intention Exclusive Lock（IX），表示事务准备给数据行加入排他锁，也就是说一个数据行加锁前必须先取得该表的 IX 锁。
+
+意向锁是由数据引擎自己维护的，用户无法手动操作意向锁。一个事务成功地给一张表加上表锁地前提是，没有其他任何事务锁定了这张表地任意一行。因此需要进行全表的搜索并检测。意向锁的作用，提高加表锁的效率。可以将意向锁看为是否加锁的标识。
+
+行锁算法
+
+* 记录锁 Record Lock，锁定记录
+* 间隙锁 Gap Lock，锁定记录不存在的范围
+* 临键锁 Next-Key Lock，锁定记录和记录不存在的返回。
+
+
+
+### 乐观锁和悲观锁
+
+**乐观锁**
+
+假设不会发生并发冲突，只是在提交操作时检查是否违反数据完整性。每次拿数据时都任务别人不会修改，所以不会上锁，但是在提交更新的时候会判断一下在此期间别人有没有更新这个数据。乐观锁适用于读多写少的应用场景，这样可以提高吞吐量。
+
+实现方式：
+
+1. 使用数据版本（Version）记录机制实现；
+2. 使用时间戳（timestamp）
+
+**悲观锁**
+
+假定会发生并发冲突，屏蔽一切可能违反数据完整性的操作。每次去拿数据的时候都认为别人会修改，所以每次在拿数据的时候都会上锁，这样别人想拿这个数据就会block直到它拿到锁。
 
 ### InnoDB 在 RR 级别就可以解决幻读的情况，具体是怎么实现的？
 
@@ -918,9 +1320,49 @@ InnoDB 在分布式事务的情况下一般会用到 SERIALIZABLE（可串行化
 
 
 
-### 范式
+### 三大范式
+
+为什么需要数据规范化：
+
+* 信息重复；
+* 更新异常；
+* 插入异常；
+  * 无法正常显示信息
+* 删除异常；
 
 
+
+> [关系型数据库设计：三大范式的通俗理解](https://www.cnblogs.com/wsg25/p/9615100.html)
+
+**第一范式（1NF）**
+
+* **原子性**：要求数据库表的每一列都是不可分割的原子数据项。
+
+
+
+**第二范式（2NF）**
+
+* 满足第一范式；
+* 表中非主键列都和主键相关，而不存在对主键的部分依赖（主要针对联合主键而言）；
+* 要求每个表只描述一件事情。
+
+
+
+**第三范式（3NF）**
+
+* 前提是满足第一范式和第二范式；
+* 需要确保数据表中的每一列数据都和主键直接相关，而不能间接相关。
+
+
+
+### 规范性和性能问题
+
+阿里规范：关联查询的表不得超过三张表
+
+* 考虑商业化的需求和目标，数据库的性能更加重要；
+* 在规范性能时，需要适当的考虑一下规范性；
+* 故意给某些表增加一些冗余字段，减少联表查询；
+* 故意增加一些计算列（从大数据量降低为小数据量的查询）
 
 
 
@@ -978,6 +1420,45 @@ Redis 集群中新的节点开启是将之前的持久化数据进行一次全�
 
 ## Linux
 
+### Linux 查找当前目录下 包含特定字符串 的所有文件
+
+> [Linux 查找当前目录下 包含特定字符串 的所有文件](https://www.cnblogs.com/miracle-luna/p/11037614.html)
+
+```bash
+grep -rn "Hello World" ./	# 递归查找当前目录下包含 "Hello World" 的字符串的文件
+find ./ -name "*.*" | xargs grep -ril "Hello World"				# find 命令根据文件名获取
+find ./ -type f -name "*.txt" | xargs grep -rl "Hello World"	# 知道文件类型
+```
+
+
+
+### Shell编程：日志找出频率最高的 n 个单词
+
+```bash
+
+#!/bin/bash
+end=$1   #S1是输出频率最高单词的个数
+cat $2 |  #是目标文本文件的名称
+tr -cs "[a-z][A-Z]" "[\n*]" |  #将文本文件以一行一个单词的形式显示
+tr A-Z a-z | #将单词的大写字母转为小写字母
+sort | #对单词排序
+uniq -c | #对排序好的单词列表统计每一个单词出现的次数
+sort -k1nr -k2 | #按出现频率排序，再按字母顺序排序
+head -n "$end" #显示前$end行 如何$end = 5则显示先5行
+```
+
+
+
+```bash
+cat test.sh | tr -cs "[a-z][A-Z]" "[\n*]" | tr A-Z a-z | sort | uniq -c | sort -k1r -k2 |head -1
+      4 end
+
+```
+
+
+
+
+
 ### ls 命令会发生哪些系统调用
 
 `exec`，`fork` 和 `read`。
@@ -1014,7 +1495,15 @@ IO 多路复用是指内核一旦发现进程指定的一个或多个 I/O 条件
 
 **基本原理**：
 
-* 客户端操作服务器时会产生三种文件描述符（fd），writefds，readfds 和 exceptfds。select 会阻塞住监视 3 类文件描述符，等有数据，可读，可写，出异常或超时后就会返回。返回后通过遍历 fdset 整个数组来找到就绪的描述符，进行对应的 IO 操作。
+* 客户端操作服务器时会产生三种文件描述符（fd），writefds，readfds 和 exceptfds。select 会阻塞住监视 3 类文件描述符，等有数据，可读，可写，出异常或超时后就会产生中断后返回。通过遍历 fd_set 整个数组来找到就绪的描述符，进行对应的 IO 操作。
+
+1. select 函数，第一遍轮询，它没有发现就绪状态的 socket，就会把当前进程，保留给需要检查 socket 的等待队列中。socket 结构分为读缓存，写缓存和等待队列。挂起 select 进程；
+2. 假设客户端往当前服务器发送了数据，数据通过网线到网卡，网卡由 DMA 硬件 方式直接将数据写道内存中。数据完成传输后，触发网络传输完毕的中断程序。中断程序会获得 CPU 执行权，它的执行逻辑：
+   * 根据内存中的数据包，来分析数据包（IP 端口号）是哪个 socket 的数据，找到对应的 socket 实例，将数据导入到 socket 的读缓冲区中；
+   * 导入完成后，检查 socket 的等待队列，是不是有等待者，如果有的话，将等待者移动到工作队列中。
+3. select 进程又回到工作队列中，又有机会获取 CPU 时间片了。
+4. select 函数再检查 fd_set 数组，就发现有就绪的 socket 了，就会给就绪的 socket 的 fd 打标记；
+5. 轮询检查每个 socket 的 fd 是否被打标记，处理被打标记的 fd。
 
 **优点**：几乎在所有的平台上都支持，跨平台支持好；
 
@@ -1032,12 +1521,32 @@ IO 多路复用是指内核一旦发现进程指定的一个或多个 I/O 条件
 
 **epoll（Linux）**
 
+要解决 select 和 poll 的两大问题：
+
+1. 函数调用时 fd_set 从用户态拷贝到内核态的开销很大；
+2. 系统调用返回后不知道哪些 socket(fd) 就绪；
+
+
+
+epoll 函数再内核空间中有对应的数据结构 eventpoll 来存储，eventpoll 对象可以通过系统调用函数 epool_create() 创建，创建完成后，系统函数返回 epfd。此时在内核中开辟了一小块已知的空间。
+
+EventPoll 的数据结构，主要分为两块重要区域：
+
+1. 检查列表，存放需要监听的 socket_fd 列表；
+2. 就绪队列，存放就绪状态的 socket 信息
+3. 等待队列，epoll_wait 调用后的队列
+
+提供两个重要函数：
+
+1. epoll_ctr：可以根据 eventpoll-id 来增删改内核空间上 eventpoll 对象的检查列表中的 fd，绑定 callback 函数；
+2. epoll_wait：默认情况下阻塞调用线程，轮询所有的 callback 集合，并完成对应的 IO 操作。
+
 **基本原理**：
 
 * 没有 fd 个数限制，用户态拷贝到内核态只需要一次，使用事件通知机制来触发。通过 epoll_ctl 注册 fd，一旦 fd 就绪就会通过 callback 回调机制来来激活对应 fd，进行相关的 IO 操作。
 * epoll 之所以高性能是得益于它的三个函数：
-  * epoll_create() 系统启动时，在 Linux 内核中申请一个 红黑树数据文件系统，返回 epoll 对象，也是一个 fd；
-  * epoll_ctl() 每新建一个连接，都通过该函数操作 epoll 对象，在这对象中修改添加删除对应的链接 fd，绑定一个 callback 函数；
+  * epoll_create() 系统启动时，在 Linux 内核中申请一个 红黑树数据结构，返回 eventpoll对象，也是一个 fd；
+  * epoll_ctl() 每新建一个连接，都通过该函数操作 eventpoll对象，在这对象中修改添加删除对应的链接 fd，绑定一个 callback 函数；
   * epoll_wait() 轮询所有的 callback 集合，并完成对应的 IO 操作。
 
 **优点**：
@@ -1279,13 +1788,15 @@ Zs      1132    1188 [ssh-agent] <defunct>
 
 ### 冒泡排序
 
+稳定排序
+
 ```java
 public class BubbleSort {
     public static <T extends Comparable<? super T>>
     void sort(T[] nums) {
         T temp;
         
-        // 一共进行 nums.length 轮比较，每轮少比较一次
+        // 一共进行 nums.length - 1 轮比较，每轮少比较一次
         for (int i = 1; i < nums.length; i++) {
             // 如果本轮没有进行交换，表示序列已经有序，退出循环
             boolean flag = true;
@@ -1309,6 +1820,8 @@ public class BubbleSort {
 
 
 ### 选择排序
+
+稳定排序
 
 ```Java
 public class SelectionSort {
@@ -1341,13 +1854,262 @@ public class SelectionSort {
 
 ### 插入排序
 
+稳定排序
+
+将第一待排序序列第一个元素看做一个有序序列，把第二个元素到最后一个元素当成是未排序序列。
+
+从头到尾依次扫描未排序序列，将扫描到的每个元素插入有序序列的适当位置。（如果待插入的元素与有序序列中的某个元素相等，则将待插入元素插入到相等元素的后面。）
+
+```Java
+public class InsertionSort {
+    public static <T extends Comparable<? super T>>
+    T[] sort(T[] nums) {
+        T[] arr = Arrays.copyOf(nums, nums.length);
+		
+        // 第一个元素视为有序，从第二个元素开始
+        for (int i = 1; i < arr.length; i++) {
+            // 记录要插入的数据
+            T old = arr[i];	
+            // 从已排序的序列的最右侧开始比较，找到比它小的数
+            int j = i;	
+            while (j > 0 && arr[j - 1].compareTo(old) > 0) {
+                arr[j] = arr[j - 1];
+                j--;
+            }
+			// 存在比其小的数，插入
+            if (j != i) {
+                arr[j] = old;
+            }
+        }
+        return arr;
+    }
+}
 ```
 
-```
+### 希尔排序
+
+非稳定排序
 
 
 
 ### 归并排序
+
+稳定排序
+
+归并排序（Merge sort）是建立在归并操作上的一种有效的排序算法。该算法是采用分治法（Divide and Conquer）的一个非常典型的应用。
+
+作为一种典型的分而治之思想的算法应用，归并排序的实现由两种方法：
+
+- 自上而下的递归（所有递归的方法都可以用迭代重写，所以就有了第 2 种方法）；
+- 自下而上的迭代；
+
+**算法步骤**
+
+1. 申请空间，使其大小为两个已经排序序列之和，该空间用来存放合并后的序列；
+2. 设定两个指针，最初位置分别为两个已经排序序列的起始位置；
+3. 比较两个指针所指向的元素，选择相对小的元素放入到合并空间，并移动指针到下一位置；
+4. 重复步骤 3 直到某一指针达到序列尾；
+5. 将另一序列剩下的所有元素直接复制到合并序列尾。
+
+
+
+```Java
+public class MergeSort {
+    public static int[] sort(int[] nums) {
+        if (nums.length < 2) {
+            return nums;
+        }
+        int[] result = new int[nums.length];
+        merge(nums, result, 0, nums.length - 1);
+        return result;
+    }
+	
+    // 递归归并方法
+    public static void merge(int[] arr, int[] result, int start, int end) {
+        // 一个元素视为已排序
+        if (start >= end) {
+            return;
+        }
+        // 当前子数组长度
+        int length = end - start;
+        // 当前子数组中间值
+        int mid = length / 2 + start;
+        // 左子数组
+        int start1 = start;
+        int end1 = mid;
+        // 右子数组
+        int start2 = mid + 1;
+        int end2 = end;
+        // 一分为二对左右子数组做归并排序
+        merge(arr, result, start1, end1);
+        merge(arr, result, start2, end2);
+        // 左右子数组归并结束后，将两边按序合并成一个新数组
+        int k = start;
+        // 升序排序
+        while (start1 <= end1 && start2 <= end2) {
+            result[k++] = arr[start1] < arr[start2] ? arr[start1++] : arr[start2++];
+        }
+        // 左子数组还有元素
+        while (start1 <= end1) {
+            result[k++] = arr[start1++];
+        }
+        // 右子数组还有元素
+        while (start2 <= end2) {
+            result[k++] = arr[start2++];
+        }
+        // 更新 arr
+        for (k = start; k <= end; k++) {
+            arr[k] = result[k];
+        }
+    }
+}
+
+```
+
+### 快速排序
+
+快速排序使用分治法（Divide and conquer）策略来把一个串行（list）分为两个子串行（sub-lists）。
+
+快速排序又是一种分而治之思想在排序算法上的典型应用。本质上来看，快速排序应该算是在冒泡排序基础上的递归分治法。
+
+**算法步骤**
+
+1. 从数列中挑出一个元素，称为 "基准"（pivot）;
+2. 重新排序数列，所有元素比基准值小的摆放在基准前面，所有元素比基准值大的摆在基准的后面（相同的数可以到任一边）。在这个分区退出之后，该基准就处于数列的中间位置。这个称为分区（partition）操作；
+3. 递归地（recursive）把小于基准值元素的子数列和大于基准值元素的子数列排序；
+
+```Java
+public class QuickSort {
+    static int[] sort(int[] nums) {
+        int[] arr = Arrays.copyOf(nums, nums.length);
+
+        quickSort(arr, 0, arr.length - 1);
+        return arr;
+    }
+
+    static void quickSort(int[] arr, int start, int end) {
+        if (start > end) {
+            return;
+        }
+        // 基准值 pivot 设置为数组第一个元素
+        int pivot = arr[start];
+        // i 从左向右扫描，寻找比 pivot 大的值，交换到 pivot 右侧
+        int i = start;
+        // j 从右向左扫描，寻找比 pivot 小的值，交换到 pivot 左侧
+        int j = end;
+        // i == j 表明已找到 pivot 的最终位置
+        while (i != j) {
+            // j 从右向左寻找第一个比 pivot 小的值 arr[j]
+            while (i < j && arr[j] > pivot) {
+                j--;
+            }
+            // 交换 pivot 与 arr[j] 
+            if (i < j) {
+                arr[i] = arr[j];
+                i++;
+            }
+            // i 从左向右寻找第一个比 pivot 大的值 arr[i]
+            while (i < j && arr[i] < pivot) {
+                i++;
+            }
+			// 交换 pivot 与 arr[i]
+            if (i < j) {
+                arr[j] = arr[i];
+                j--;
+            }
+        }
+        // 将 pivot 放到最终存放的位置
+        arr[i] = pivot;
+        // 递归处理 pivot 左右两侧子数组
+        quickSort(arr, start, i - 1);
+        quickSort(arr, i + 1, end);
+    }
+}
+
+```
+
+
+
+### 堆排序
+
+堆排序（Heapsort）是指利用堆这种数据结构所设计的一种排序算法。堆积是一个近似完全二叉树的结构，并同时满足堆积的性质：即子结点的键值或索引总是小于（或者大于）它的父节点。堆排序可以说是一种利用堆的概念来排序的选择排序。分为两种方法：
+
+1. 大顶堆：每个节点的值都大于或等于其子节点的值，在堆排序算法中用于升序排列；
+2. 小顶堆：每个节点的值都小于或等于其子节点的值，在堆排序算法中用于降序排列；
+
+堆排序的平均时间复杂度为 Ο(nlogn)。
+
+**算法步骤**
+
+1. 创建一个堆 H[0……n-1]；
+2. 把堆首（最大值）和堆尾互换；
+3. 把堆的尺寸缩小 1，并调用 shift_down(0)，目的是把新的数组顶端数据调整到相应位置；
+4. 重复步骤 2，直到堆的尺寸为 1。
+
+
+
+``` Java
+public class HeapSort {
+    public static int[] sort(int[] nums) {
+        int[] arr = Arrays.copyOf(nums, nums.length);
+        int length = arr.length;
+        // 构建最大堆，数组第一个元素（堆顶）为数组最大值
+        buildMaxHeap(arr, length);
+		// 从数组最后一个结点开始，依次和堆顶元素交换并调整最大堆
+        for (int i = length - 1; i > 0; i--) {
+            // 将堆顶元素依次与堆中最后一个元素交换
+            swap(arr, 0, i);
+            // 堆大小递减 1
+            length--;
+            // 调整最大堆
+            heapify(arr, 0, length);
+        }
+		
+        return arr;
+    }
+	
+    // 构建最大堆
+    private static void buildMaxHeap(int[] arr, int length) {
+        // 根据完全二叉树的性质，比 length / 2 大的结点为叶子结点，不需要调整
+        for (int i = length / 2; i >= 0; i--) {
+            heapify(arr, i, length);
+        }
+    }
+	
+    // 调整最大堆
+    private static void heapify(int[] arr, int i, int length) {
+        // 左孩子索引
+        int left = 2 * i;
+        // 右孩子索引
+        int right = 2 * i + 1;
+        // 保留当前结点索引
+        int largest = i;
+        // 如果存在左孩子，且左孩子值大于当前结点值
+        if (left < length && arr[left] > arr[largest]) {
+            largest = left;
+        }
+        // 如果存在右孩子，且右孩子值大于当前结点值
+        if (right < length && arr[right] > arr[largest]) {
+            largest = right;
+        }
+		// 交换当前结点和它的左右结点中较小值，并继续向下调整
+        if (largest != i) {
+            // 交换
+            swap(arr, i, largest);
+            // 向下调整
+            heapify(arr, largest, length);
+        }
+    }
+
+    private static void swap(int[] arr, int i, int j) {
+        int temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+}
+```
+
+
 
 
 

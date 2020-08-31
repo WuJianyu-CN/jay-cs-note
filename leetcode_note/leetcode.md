@@ -3648,7 +3648,6 @@ class MinStack {
         if (stack.pop() == min) {
             min = stack.pop();
         }
-
     }
 
     public int top() {
@@ -4271,7 +4270,7 @@ class Solution {
 
 #### 单调递增栈辅助，逆向遍历数组
 
-[单调递增栈辅助，逆向遍历数组][https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-hou-xu-bian-li-xu-lie-lcof/solution/dan-diao-di-zeng-zhan-by-shi-huo-de-xia-tian/]
+[单调递增栈辅助，逆向遍历数组](https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-hou-xu-bian-li-xu-lie-lcof/solution/dan-diao-di-zeng-zhan-by-shi-huo-de-xia-tian/)
 
 参考此解法
 
@@ -5360,13 +5359,10 @@ class Solution {
                 // 将 c 和之前的元素全部出队
                 while (queue.poll() != c) {
                 }
-                // 当前子字符串长度
-                temp = queue.size();
             }
-            temp++;
-            // 重新计算最长字符串长度
-            result = Math.max(temp, result);
             queue.offer(c);
+            // 重新计算最长字符串长度
+            result = Math.max(queue.size(), result);
         }
         return result;
     }
@@ -5379,5 +5375,1154 @@ class Solution {
 
 
 
+## # 07 整数反转
+
+### 问题描述
+
+```Java
+给出一个 32 位的有符号整数，你需要将这个整数中每位上的数字进行反转。
+
+示例 1:
+输入: 123
+输出: 321
+
+示例 2:
+输入: -123
+输出: -321
+
+示例 3:
+输入: 120
+输出: 21
+
+注意:
+假设我们的环境只能存储得下 32 位的有符号整数，则其数值范围为 [−231,  231 − 1]。请根据这个假设，如果反转后整数溢出那么就返回 0
+
+```
+
+### 解题思路
+
+使用一个 `long` 类型的数字 n 来存放反转后的结果，最后判断是否溢出。
+
+示例代码：
+
+```Java
+class Solution {
+    public int reverse(int x) {
+        // int 类型的最大值和最小值
+        int max = 0x7fffffff;
+        int min = 0x80000000;
+        long n = 0;
+        // 从 x 的低位向高位开始转换
+        while(x != 0){
+            n = n * 10 + x % 10;
+            x = x / 10;
+        }
+        // 判断转换为 int 类型后是否溢出
+        return (n < min || n > max) ? 0 : (int) n;
+    }
+}
+```
+
+执行结果：
+
+![image-20200817163535968](leetcode.assets/image-20200817163535968.png)
+
+## # 43 字符串相乘
+
+### 问题描述
+
+```java
+给定两个以字符串形式表示的非负整数 num1 和 num2，返回 num1 和 num2 的乘积，它们的乘积也表示为字符串形式。
+示例 1:
+输入: num1 = "2", num2 = "3"
+输出: "6"
+    
+示例 2:
+输入: num1 = "123", num2 = "456"
+输出: "56088"
+    
+说明：
+num1 和 num2 的长度小于110。
+num1 和 num2 只包含数字 0-9。
+num1 和 num2 均不以零开头，除非是数字 0 本身。
+不能使用任何标准库的大数类型（比如 BigInteger）或直接将输入转换为整数来处理。
+    
+```
 
 
+
+### 解题思路
+
+存放每个位数的乘积，相加后统一进位。
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public String multiply(String num1, String num2) {
+        if(num1.equals("0") || num2.equals("0")){
+            return "0";
+        }
+        int len1 = num1.length();
+        int len2 = num2.length();
+        
+        // 最终结果数组，最长为 len1+len2 最短为 len1+len2-1
+        int[] ansArr = new int[len1 + len2];
+        
+        // 从数组最后一位即数字个位数开始
+        for(int i = len1-1; i>=0; i--){
+            // 第一个乘数 x，字符 - '0' 转换为对应数字
+            int x = num1.charAt(i) - '0';
+            for(int j = len2-1; j>=0;j--){
+                // 第二个乘数 y
+                int y = num2.charAt(j) - '0';
+                // 在结果字符串中的索引为 i+j+1
+                ansArr[i+j+1] += x*y; 
+            }
+        }
+        
+        for(int i = len1 + len2 - 1; i > 0; i--){
+            ansArr[i-1] += ansArr[i] / 10;
+            ansArr[i] %= 10;
+        }
+        
+        StringBuilder ans = new StringBuilder();
+        // 判断结果的位数
+        int index = ansArr[0] == 0? 1:0;
+        while(index < len1 + len2){
+            ans.append(ansArr[index]);
+            index++;
+        }
+        return ans.toString();
+    }
+}
+```
+
+执行结果：
+
+![image-20200815173402530](leetcode.assets/image-20200815173402530.png)
+
+
+
+## # 43 字符串相加
+
+### 问题描述
+
+```java
+给定两个字符串形式的非负整数 num1 和num2 ，计算它们的和。
+
+提示：
+num1 和num2 的长度都小于 5100
+num1 和num2 都只包含数字 0-9
+num1 和num2 都不包含任何前导零
+你不能使用任何內建 BigInteger 库， 也不能直接将输入的字符串转换为整数形式
+    
+```
+
+
+
+### 解题思路
+
+按位相加，注意进位。
+
+示例代码：
+
+```Java
+class Solution {
+    public String addStrings(String num1, String num2) {
+        if (num1.length() == 0) {
+            return num2;
+        }
+        if (num2.length() == 0) {
+            return num1;
+        }
+        // 先确定两个数的位数大小
+        String lo = num1.length() >= num2.length() ? num1 : num2;
+        String sh = num1.length() >= num2.length() ? num2 : num1;
+        int len1 = lo.length();
+        int len2 = sh.length();
+        // 两个数的位数差
+        int sub = len1 - len2;
+        int[] ansArr = new int[len1 + 1];
+        int carry = 0;
+        // 按照位数较多的数字按位相加，较少位数的数字高位补 0
+        for (int i = len1 - 1; i >= 0; i--) {
+            int x = lo.charAt(i) - '0';
+            int y = i - sub >= 0 ? sh.charAt(i - sub) - '0' : 0;
+
+            int sum = x + y + carry;
+            carry = sum > 9 ? 1 : 0;
+            ansArr[i + 1] = (sum % 10);
+        }
+        // 最高设置为进位符
+        ansArr[0] += carry;
+        // 高位的 0 去掉
+        int start = carry == 0 ? 1 : 0;
+        StringBuilder sb = new StringBuilder();
+        for (int i = start; i < ansArr.length; i++) {
+            sb.append(ansArr[i]);
+        }
+        return sb.toString();
+    }
+}
+```
+
+执行结果：
+
+![image-20200815195814704](leetcode.assets/image-20200815195814704.png)
+
+
+
+[https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-hou-xu-bian-li-xu-lie-lcof/solution/dan-diao-di-zeng-zhan-by-shi-huo-de-xia-tian/]: 
+
+
+
+## # 94 二叉树的中序遍历
+
+### 问题描述
+
+
+
+### 解题思路
+
+**迭代法**
+
+使用辅助栈
+
+示例代码
+
+```Java
+class Solution {
+    public List<Integer> inorderTraversal(TreeNode root) {
+        if (root == null){
+            return new LinkedList<Integer>();
+        }
+        List<Integer> result = new LinkedList<>();
+        
+        // 辅助栈
+        Deque<TreeNode> stack = new LinkedList<>();
+        TreeNode current = root;
+        
+        while (current != null || !stack.isEmpty()){
+            if (current != null){
+                // 如果有左孩子，则将当前结点入栈，之后进入左子树
+                stack.push(current);
+                current = current.left;
+            } else{
+                // 否则，取出栈顶元素，并访问，之后进入右子树
+                current = stack.pop();
+                result.add(current.val);
+                current = current.right;
+            }
+        }
+        return result;
+    }
+}
+```
+
+
+
+
+
+## # 98 验证二叉搜索树
+
+### 问题描述
+
+```Java
+给定一个二叉树，判断其是否是一个有效的二叉搜索树。
+假设一个二叉搜索树具有如下特征：
+节点的左子树只包含小于当前节点的数。
+节点的右子树只包含大于当前节点的数。
+所有左子树和右子树自身必须也是二叉搜索树。
+    
+示例 1:
+输入:
+    2
+   / \
+  1   3
+输出: true
+    
+示例 2:
+输入:
+    5
+   / \
+  1   4
+     / \
+    3   6
+输出: false
+    
+解释: 输入为: [5,1,4,null,null,3,6]。
+     根节点的值为 5 ，但是其右子节点值为 4 。
+    
+```
+
+
+
+### 解题思路
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean isValidBST(TreeNode root) {
+        if (root == null){
+            return true;
+        }
+        // 如果左子树存在且左子树中有比根结点大的值，则不满足二叉搜索树
+        if (root.left != null && root.val <= mostRightVal(root.left)){
+            return false;
+        }
+        // 如果右子树存在且右子树中有比根结点小的值，则不满足二叉搜索树
+        if (root.right != null && root.val >= mostLeftVal(root.right)){
+            return false;
+        }
+        // 左右子树均满足二叉搜索树，则当前树也满足二叉搜索树
+        return isValidBST(root.left) && isValidBST(root.right);
+    }
+    
+    // 求所给子树的最小值
+    public int mostLeftVal(TreeNode root){
+        while(root.left != null){
+            root = root.left;
+        }
+        return root.val;
+    }
+    
+    // 求所给子树的最大值
+    public int mostRightVal(TreeNode root){
+        while(root.right != null){
+            root = root.right;
+        }
+        return root.val;
+    }
+}
+```
+
+执行结果：
+
+![image-20200831205306438](leetcode.assets/image-20200831205306438.png)
+
+
+
+## # 101 对称二叉树
+
+### 问题描述
+
+```Java
+给定一个二叉树，检查它是否是镜像对称的。
+
+例如，二叉树 [1,2,2,3,4,4,3] 是对称的。
+
+    1
+   / \
+  2   2
+ / \ / \
+3  4 4  3
+ 
+但是下面这个 [1,2,2,null,3,null,3] 则不是镜像对称的:
+    1
+   / \
+  2   2
+   \   \
+   3    3
+ 
+进阶：
+你可以运用递归和迭代两种方法解决这个问题吗？
+```
+
+
+
+### 解题思路
+
+**递归法**
+
+递归判断每个对应位置上的结点是否对称
+
+示例代码
+
+```Java
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        if (root == null){
+            return true;
+        }
+        // 判断左右子树是否满足对称
+        return symmetric(root.left, root.right);
+    }
+    
+    public boolean symmetric(TreeNode left, TreeNode right){
+        // 均为空，当前两个结点对称
+        if (left == null && right == null){
+            return true;
+        }
+        // 一个非空，当前两个结点不对称
+        if (left == null || right == null){
+            return false;
+        }
+        // 值不同，不对称
+        if (left.val != right.val){
+            return false;
+        }
+        // 递归判断每个对应的结点是否为镜像结点
+        return symmetric(left.left, right.right) && symmetric(left.right, right.left);
+    }
+}
+```
+
+执行结果：
+
+![image-20200831171150207](leetcode.assets/image-20200831171150207.png)
+
+### 迭代法
+
+维护一个辅助队列，将结点按照左右对称的方式入队，判断是否满足镜像对称条件。
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        if(root == null){
+            return true;
+        }
+        Deque<TreeNode> queue = new LinkedList<>();
+        // 依次将左右孩子入队
+        TreeNode left = root.left;
+        TreeNode right = root.right;
+        queue.offer(left);
+        queue.offer(right);
+        
+        while (!queue.isEmpty()){
+            // 获取前两个结点，判断这两个结点是否对称
+            left = queue.poll();
+            right = queue.poll();
+            // 两个结点均为 null，视为对称
+            if (left == null && right == null){
+                continue;
+            }
+            // 不对称
+            if (left == null || right == null || left.val != right.val){
+                return false;
+            }
+            // 继续按照对称的方式在队列中添加结点
+            queue.offer(left.left);
+            queue.offer(right.right);
+            queue.offer(left.right);
+            queue.offer(right.left);            
+        }
+        return true;
+    }
+   
+}
+```
+
+执行结果：
+
+![image-20200831173640689](leetcode.assets/image-20200831173640689.png)
+
+
+
+## # 102 二叉树的层序遍历  
+
+### 问题描述
+
+``` Java
+给你一个二叉树，请你返回其按 层序遍历 得到的节点值。 （即逐层地，从左到右访问所有节点）。
+ 
+示例：
+二叉树：[3,9,20,null,null,15,7],
+    3
+   / \
+  9  20
+    /  \
+   15   7
+        
+返回其层次遍历结果：
+[
+  [3],
+  [9,20],
+  [15,7]
+]
+```
+
+
+
+### 解题思路
+
+**广度优先遍历法**
+
+按层记录一层所有的结点值。
+
+示例代码:
+
+``` Java
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        if (root == null){
+            return new LinkedList<>();
+        }
+        
+        List<List<Integer>> result = new LinkedList<>();
+        // 广度优先遍历辅助队列
+        Deque<TreeNode> queue = new LinkedList<>();
+        TreeNode current = root;
+        queue.offer(current);
+        
+        while(!queue.isEmpty()){
+            // 本层的临时链表
+            List<Integer> temp = new LinkedList<>();
+            // 一次循环中记录一层的所有结点的值
+            int n = queue.size();
+            for (int i = 0; i < n; i++){
+                current = queue.poll();
+                temp.add(current.val);
+                if (current.left != null){
+                    queue.offer(current.left);
+                }
+                if (current.right != null){
+                    queue.offer(current.right);
+                }
+            }
+            result.add(temp);
+        }
+        return result;
+    }
+}
+```
+
+执行结果：
+
+![image-20200831175223220](leetcode.assets/image-20200831175223220.png)
+
+
+
+## # 103 二叉树的锯齿形层次遍历
+
+### 问题描述
+
+```java
+给定一个二叉树，返回其节点值的锯齿形层次遍历。（即先从左往右，再从右往左进行下一层遍历，以此类推，层与层之间交替进行）。
+
+例如：
+给定二叉树 [3,9,20,null,null,15,7],
+    3
+   / \
+  9  20
+    /  \
+   15   7
+          
+返回锯齿形层次遍历如下：
+[
+  [3],
+  [20,9],
+  [15,7]
+]
+```
+
+
+
+### 解题思路
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
+        if (root == null){
+            return new LinkedList<List<Integer>>();
+        }
+        // 结果链表
+        LinkedList<List<Integer>> result = new LinkedList<>();
+        Deque<TreeNode> queue = new LinkedList<>();
+        TreeNode current = root;
+        queue.offer(current);
+        // 广度优先遍历
+        while(!queue.isEmpty()){
+            // 一次遍历一层元素
+            int n = queue.size();
+            LinkedList<Integer> temp = new LinkedList<>(); 
+            for (int i = 0; i < n; i++){
+                current = queue.poll();
+                // 根据当前层次的奇偶判断是从左向右还是从右向左保存结点
+                if (result.size() % 2 == 0){
+                    temp.addLast(current.val);
+                } else {
+                    temp.addFirst(current.val);
+                }
+                if (current.left != null){
+                    queue.offer(current.left);
+                }
+                if (current.right != null){
+                    queue.offer(current.right);
+                }
+            }
+            // 添加当前层的值
+            result.add(temp);
+        }
+        return result;
+    }
+}
+```
+
+执行时间：
+
+![image-20200831190629626](leetcode.assets/image-20200831190629626.png)
+
+## # 104 二叉树的最大深度
+
+### 问题描述
+
+```Java
+给定一个二叉树，找出其最大深度。
+二叉树的深度为根节点到最远叶子节点的最长路径上的节点数。
+说明: 叶子节点是指没有子节点的节点。
+    
+示例：
+给定二叉树 [3,9,20,null,null,15,7]，
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回它的最大深度 3 。
+```
+
+
+
+### 解题思路
+
+**深度优先遍历（递归法）**
+
+叶子结点的深度为 0，一个结点的深度为它的左右子树的深度中较大值加一。
+
+```Java
+class Solution {
+    public int maxDepth(TreeNode root) {
+        // 当前树根结点为 null 时，树深为 0
+        if (root == null){
+            return 0;
+        }
+        // 一个结点的深度为它的左右子树的深度中较大值加一
+        return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+    }
+}
+```
+
+**广度优先遍历（非递归）**
+
+层序遍历，每遍历一层，深度加一。
+
+```java
+class Solution {
+    public int maxDepth(TreeNode root) {
+        if (root == null){
+            return 0;
+        }
+        int depth = 0;
+        Deque<TreeNode> queue = new LinkedList<>();
+        TreeNode current = root;
+        queue.offer(current);
+        // 层序遍历，每层深度 + 1
+        while (!queue.isEmpty()){
+            depth++;
+            // 遍历当前层的所有元素
+            int n = queue.size();
+            for (int i = 0; i < n; i++){
+                current = queue.poll();
+                if (current.left != null){
+                    queue.offer(current.left);
+                }
+                if (current.right != null){
+                    queue.offer(current.right);
+                }
+            }
+        }
+        return depth;
+    }
+}
+```
+
+执行结果：
+
+![image-20200831163654079](leetcode.assets/image-20200831163654079.png)
+
+
+
+## # 105 从前序与中序遍历序列构造二叉树
+
+### 问题描述
+
+```java
+根据一棵树的前序遍历与中序遍历构造二叉树。
+注意:
+你可以假设树中没有重复的元素。
+
+例如，给出
+前序遍历 preorder = [3,9,20,15,7]
+中序遍历 inorder = [9,3,15,20,7]
+返回如下的二叉树：
+    3
+   / \
+  9  20
+    /  \
+   15   7
+    
+```
+
+
+
+### 解题思路
+
+前序序列的首个元素为树的根结点。找到根结点在中序序列的位置 index，在 index 左侧的为左子树结点，在 index 右侧的为右子树结点。递归构建二叉树。
+
+```java
+class Solution {
+    Map<Integer, Integer> map = new HashMap<>();
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        if (preorder == null || preorder.length == 0){
+            return null;
+        }
+        // 将中序序列的值与索引存放到 hashmap 中，便于查询索引
+        for(int i = 0; i < inorder.length; i++){
+            map.put(inorder[i], i);
+        }
+        return build(preorder, 0, preorder.length-1, inorder, 0, inorder.length-1);
+    }
+    
+    public TreeNode build(int[] preorder, int start1, int end1,
+                         int[] inorder, int start2, int end2){
+        if (start1 > end1){
+            return null;
+        }
+        // 前序遍历的首元素为树的根结点
+        int rootVal = preorder[start1];
+        TreeNode root = new TreeNode(rootVal);
+        // 找到根结点在中序序列中的索引
+        int index = map.get(rootVal);
+        
+        // 记录左右子树的个数
+        int leftNumber = index - start2;
+        int rightNumber = end2 - index;
+        // 构建左子树
+        root.left = build(preorder, start1 + 1, start1 + leftNumber,
+                         inorder, start2, start2 + leftNumber - 1);
+        // 构建右子树
+        root.right = build(preorder, end1 - rightNumber + 1 , end1,
+                          inorder, end2 - rightNumber + 1, end2);
+        return root;
+    }
+}
+```
+
+
+
+执行结果：
+
+![image-20200831220127590](leetcode.assets/image-20200831220127590.png)
+
+
+
+## # 108 有序数组转换二叉搜索树
+
+### 问题描述
+
+```Java
+将一个按照升序排列的有序数组，转换为一棵高度平衡二叉搜索树。
+本题中，一个高度平衡二叉树是指一个二叉树每个节点 的左右两个子树的高度差的绝对值不超过 1。
+
+示例:
+给定有序数组: [-10,-3,0,5,9],
+一个可能的答案是：[0,-3,9,-10,null,5]，它可以表示下面这个高度平衡二叉搜索树：
+
+      0
+     / \
+   -3   9
+   /   /
+ -10  5
+    
+```
+
+
+
+### 解题思路
+
+#### 前序遍历
+
+将数组分为：
+
+1. 左子树；
+2. 根结点；
+3. 右子树。
+
+因为数组是有序数组，所以根结点的值是数组的中间值，计算 `mid = left + (right - left) / 2` 并构建根结点。(left, mid - 1) 部分为左子树数组，(mid + 1, right) 部分为右子树数组。
+
+示例代码：
+
+```Java
+class Solution {    
+    public TreeNode sortedArrayToBST(int[] nums) {
+        if (nums == null){
+            return null; 
+        } 
+        // 前序遍历法，将数组分为 左子树===根结点===右子树 递归构建二叉搜索树
+        return toBST(nums, 0, nums.length - 1);
+    }
+
+    public TreeNode toBST(int[] nums, int left, int right){
+        // 表示上层递归的子树为 null
+        if (left > right){
+            return null;
+        }
+		// 计算根结点在数组中的索引，这种计算方式可以防止在 right 和 left 过大时的溢出
+        int mid = left + (right - left) / 2;
+        // 前序遍历构建
+        TreeNode root = new TreeNode(nums[mid]);
+        root.left = toBST(nums, left, mid - 1);
+        root.right = toBST(nums, mid + 1, right);
+        return root;
+    }
+}
+```
+
+执行结果：
+
+![image-20200817220922663](leetcode.assets/image-20200817220922663.png)
+
+
+
+
+
+## # 110 平衡二叉树
+
+### 问题描述
+
+```Java
+给定一个二叉树，判断它是否是高度平衡的二叉树。
+本题中，一棵高度平衡二叉树定义为：
+一个二叉树每个节点 的左右两个子树的高度差的绝对值不超过1。
+
+示例 1:
+给定二叉树 [3,9,20,null,null,15,7]
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回 true 。
+
+示例 2:
+给定二叉树 [1,2,2,3,3,null,null,4,4]
+
+       1
+      / \
+     2   2
+    / \
+   3   3
+  / \
+ 4   4
+返回 false 。
+    
+```
+
+
+
+### 解题思路
+
+
+
+#### 直接法（从上向下）
+
+暴力求解，使用**前序遍历法**：
+
+1. 判断根结点的左右子树的树高之差是否 <= 1；
+2. 递归判断左孩子的左右子树树高之差是否 <= 1；
+3. 递归判断右孩子的左右子树树高之差是否 <= 1；
+
+如果上述三个条件都满足，则表明这棵树是二叉平衡树。
+
+计算树高的方法：
+
+1. 记叶子结点的树高为 1；
+2. 当前树的结点为它的左右子树树高的较大值加 1。
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean isBalanced(TreeNode root) {
+        if (root == null){
+            return true;
+        }
+        // 前序遍历
+        return Math.abs(depth(root.left) - depth(root.right)) <= 1 // 判断左右子树树高之差是否 <= 1
+            && isBalanced(root.left)    // 判断左孩子的左右子树树高之差是否 <= 1
+            && isBalanced(root.right);  // 判断右孩子的左右子树树高之差是否 <= 1
+    }
+    public int depth(TreeNode root){
+        // 如果结点为空，返回树高为 0
+        if (root == null){
+            return 0;
+        }
+        // 返回当前子树的树高
+        return Math.max(depth(root.left), depth(root.right)) + 1;        
+    }
+}
+```
+
+执行结果：
+
+![image-20200817170541232](leetcode.assets/image-20200817170541232.png)
+
+
+
+#### 从下向上
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean isBalanced(TreeNode root) {
+        return recur(root) != -1;
+    }
+
+    public int recur(TreeNode root){
+        if (root == null){
+            return 0;		// 叶结点高度为 1
+        }
+        int left = recur(root.left);
+        if (left  == -1){
+            return -1;		// 提前阻断
+        }
+        int right = recur(root.right);
+        if (right == -1){
+            return -1;		// 提前阻断
+        }
+
+        return Math.abs(left - right) < 2 ? Math.max(left, right) + 1 : -1;
+    }
+}
+```
+
+执行结果：
+
+![image-20200817172622379](leetcode.assets/image-20200817172622379.png)
+
+
+
+
+
+## # 230 二叉搜索树中第K小的元素
+
+### 问题描述
+
+```java
+给定一个二叉搜索树，编写一个函数 kthSmallest 来查找其中第 k 个最小的元素。
+说明：
+你可以假设 k 总是有效的，1 ≤ k ≤ 二叉搜索树元素个数。
+
+示例 1:
+输入: root = [3,1,4,null,2], k = 1
+   3
+  / \
+ 1   4
+  \
+   2
+输出: 1
+    
+示例 2:
+输入: root = [5,3,6,2,4,null,null,1], k = 3
+       5
+      / \
+     3   6
+    / \
+   2   4
+  /
+ 1
+输出: 3
+进阶：
+如果二叉搜索树经常被修改（插入/删除操作）并且你需要频繁地查找第 k 小的值，你将如何优化 kthSmallest 函数？
+
+```
+
+### 解题思路
+
+**中序遍历法**
+
+二叉搜索树的中序遍历的结果是一个有序序列，只要找到第 k 个遍历结果即可。
+
+示例代码：
+
+```java
+class Solution {
+    public int kthSmallest(TreeNode root, int k) {
+        if (root == null){
+            return -1;
+        }
+        
+        Deque<TreeNode> stack = new LinkedList<>();
+        TreeNode current = root;
+        stack.push(current);
+        // 迭代求二叉搜索树的中序遍历的第 k 个元素
+        while ( current != null || !stack.isEmpty()){
+            if (current != null){
+                stack.push(current);
+                current = current.left;
+            } else{
+                current = stack.pop();
+                // 返回第 k 个元素
+                if (--k == 0){
+                    return current.val;
+                }
+                current = current.right;                
+            }
+        }
+        return -1;
+    }
+}
+```
+
+执行结果：
+
+![image-20200831212205031](leetcode.assets/image-20200831212205031.png)
+
+
+
+## # 236 二叉树的最近公共祖先
+
+### 问题描述
+
+```Java
+给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。
+
+百度百科中最近公共祖先的定义为：“对于有根树 T 的两个结点 p、q，最近公共祖先表示为一个结点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（一个节点也可以是它自己的祖先）。”
+例如，给定如下二叉树:  root = [3,5,1,6,2,0,8,null,null,7,4]
+
+示例 1:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
+输出: 3
+解释: 节点 5 和节点 1 的最近公共祖先是节点 3。
+
+示例 2:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4
+输出: 5
+解释: 节点 5 和节点 4 的最近公共祖先是节点 5。因为根据定义最近公共祖先节点可以为节点本身。
+ 
+说明:
+所有节点的值都是唯一的。
+p、q 为不同节点且均存在于给定的二叉树中。
+
+```
+
+
+
+### 解题思路
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        // 遍历到叶结点时返回 null
+        if (root == null) {            
+            return null;
+        }
+        // 当遍历到其中一个结点 p 或 q 时，返回该结点即可 
+        if (root.val == p.val || root.val == q.val){
+            return root;
+        }
+        
+        TreeNode findLeft = lowestCommonAncestor(root.left, p, q);
+        TreeNode findRight = lowestCommonAncestor(root.right, p, q);
+        
+        if (findLeft != null && findRight != null){
+            return root;
+        } else if (findLeft == null){
+            return findRight;
+        } else{
+            return findLeft;
+        }
+        return null;
+    }
+}
+```
+
+执行结果：
+
+![image-20200831213411571](leetcode.assets/image-20200831213411571.png)
+
+## # 285 二叉搜索树中的顺序后继
+
+### 问题描述
+
+```java
+给你一个二叉搜索树和其中的某一个结点，请你找出该结点在树中顺序后继的节点。
+结点 p 的后继是值比 p.val 大的结点中键值最小的结点。
+
+示例 1:
+输入: root = [2,1,3], p = 1
+输出: 2
+解析: 这里 1 的顺序后继是 2。请注意 p 和返回值都应是 TreeNode 类型。
+    
+示例 2:
+输入: root = [5,3,6,2,4,null,null,1], p = 6
+输出: null
+解析: 因为给出的结点没有顺序后继，所以答案就返回 null 了。
+ 
+注意:
+假如给出的结点在该树中没有顺序后继的话，请返回 null
+我们保证树中每个结点的值是唯一的
+    
+```
+
+### 解题思路
+
+**迭代法中序遍历**
+
+使用迭代法中序遍历，找到第一个比 p 的值大的结点，就是 p 的后继结点。
+
+示例代码：
+
+``` Java
+class Solution {
+    public TreeNode inorderSuccessor(TreeNode root, TreeNode p) {
+        if (root == null){
+            return null;
+        }
+        Deque<TreeNode> stack = new LinkedList<>();
+        TreeNode current = root;
+        stack.addLast(current);
+        // 非递归中序遍历
+        while (current != null || !stack.isEmpty()){
+            if (current != null){
+                stack.push(current);
+                current = current.left;
+            } else {
+                current = stack.pop();
+                // 找到第一个比 p 值大的结点，就是 p 的后继结点
+                if (p.val < current.val){
+                    return current;
+                }
+                current = current.right;
+            }      
+        }
+        return null;
+    }    
+}
+```
+
+
+
+执行结果：
+
+![image-20200831222659227](leetcode.assets/image-20200831222659227.png)
