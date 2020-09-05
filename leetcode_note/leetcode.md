@@ -5427,6 +5427,954 @@ class Solution {
 
 ![image-20200817163535968](leetcode.assets/image-20200817163535968.png)
 
+
+
+## # 8 字符串转换整数 (atoi)
+
+### 问题描述
+
+```Java
+请你来实现一个 atoi 函数，使其能将字符串转换成整数。
+
+首先，该函数会根据需要丢弃无用的开头空格字符，直到寻找到第一个非空格的字符为止。接下来的转化规则如下：
+
+如果第一个非空字符为正或者负号时，则将该符号与之后面尽可能多的连续数字字符组合起来，形成一个有符号整数。
+假如第一个非空字符是数字，则直接将其与之后连续的数字字符组合起来，形成一个整数。
+该字符串在有效的整数部分之后也可能会存在多余的字符，那么这些字符可以被忽略，它们对函数不应该造成影响。
+注意：假如该字符串中的第一个非空格字符不是一个有效整数字符、字符串为空或字符串仅包含空白字符时，则你的函数不需要进行转换，即无法进行有效转换。
+
+在任何情况下，若函数不能进行有效的转换时，请返回 0 。
+
+提示：
+本题中的空白字符只包括空格字符 ' ' 。
+假设我们的环境只能存储 32 位大小的有符号整数，那么其数值范围为 [−231,  231 − 1]。如果数值超过这个范围，请返回  INT_MAX (231 − 1) 或 INT_MIN (−231) 。
+ 
+示例 1:
+输入: "42"
+输出: 42
+
+示例 2:
+输入: "   -42"
+输出: -42
+解释: 第一个非空白字符为 '-', 它是一个负号。
+     我们尽可能将负号与后面所有连续出现的数字组合起来，最后得到 -42 。
+     
+示例 3:
+输入: "4193 with words"
+输出: 4193
+解释: 转换截止于数字 '3' ，因为它的下一个字符不为数字。
+
+示例 4:
+输入: "words and 987"
+输出: 0
+解释: 第一个非空字符是 'w', 但它不是数字或正、负号。
+     因此无法执行有效的转换。
+     
+示例 5:
+输入: "-91283472332"
+输出: -2147483648
+解释: 数字 "-91283472332" 超过 32 位有符号整数范围。 
+     因此返回 INT_MIN (−231) 。
+     
+```
+
+### 解题思路
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public int myAtoi(String str) {
+        if (str == null || str.length() == 0){
+            return 0;
+        }
+        
+        char[] chars = str.toCharArray();
+        int n = chars.length;
+        int index = 0;
+        // 删除字符串前部的空格
+        while (index < n && chars[index] == ' ') {
+            index++;
+        }
+        // 如果字符串全是空格，返回 0
+        if (index == n){
+            return 0;
+        }
+        // 正负标识位
+        boolean negative = false;
+        // 判断符号
+        if (chars[index] == '-') {
+            negative = true;
+            index ++;
+        } else if (chars[index] == '+') {
+            index ++;
+        } else if (!Character.isDigit(chars[index])) {
+            return 0;
+        }
+        // 计算数字
+        int ans = 0;
+        while (index < chars.length && Character.isDigit(chars[index])) {
+            // 将字符型转换为整型
+            int x = chars[index] - '0';
+            // 判断是否溢出
+            if (ans > (Integer.MAX_VALUE -x) / 10 ){
+                return negative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+            }
+            ans = ans * 10 + x;
+            index++;
+        }
+        
+        return negative ? -ans : ans;
+    }
+}
+```
+
+执行结果：
+
+![image-20200902211610143](leetcode.assets/image-20200902211610143.png)
+
+
+
+## # 13 罗马数字转整数
+
+### 问题描述
+
+```Java
+罗马数字包含以下七种字符: I， V， X， L，C，D 和 M。
+
+字符          数值
+I             1
+V             5
+X             10
+L             50
+C             100
+D             500
+M             1000
+例如， 罗马数字 2 写做 II ，即为两个并列的 1。12 写做 XII ，即为 X + II 。 27 写做  XXVII, 即为 XX + V + II 。
+
+通常情况下，罗马数字中小的数字在大的数字的右边。但也存在特例，例如 4 不写做 IIII，而是 IV。数字 1 在数字 5 的左边，所表示的数等于大数 5 减小数 1 得到的数值 4 。同样地，数字 9 表示为 IX。这个特殊的规则只适用于以下六种情况：
+
+I 可以放在 V (5) 和 X (10) 的左边，来表示 4 和 9。
+X 可以放在 L (50) 和 C (100) 的左边，来表示 40 和 90。 
+C 可以放在 D (500) 和 M (1000) 的左边，来表示 400 和 900。
+给定一个罗马数字，将其转换成整数。输入确保在 1 到 3999 的范围内。
+
+ 
+
+示例 1:
+
+输入: "III"
+输出: 3
+示例 2:
+
+输入: "IV"
+输出: 4
+示例 3:
+
+输入: "IX"
+输出: 9
+示例 4:
+
+输入: "LVIII"
+输出: 58
+解释: L = 50, V= 5, III = 3.
+示例 5:
+
+输入: "MCMXCIV"
+输出: 1994
+解释: M = 1000, CM = 900, XC = 90, IV = 4.
+ 
+
+提示：
+
+题目所给测试用例皆符合罗马数字书写规则，不会出现跨位等情况。
+IC 和 IM 这样的例子并不符合题目要求，49 应该写作 XLIX，999 应该写作 CMXCIX 。
+关于罗马数字的详尽书写规则，可以参考 罗马数字 - Mathematics 。
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/roman-to-integer
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+```
+
+
+
+### 解题思路
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public int romanToInt(String s) {
+        if (s == null || s.length() == 0){
+            return 0;
+        }
+        
+        char[] chars = s.toCharArray();
+        // 前一位的值
+        int preNum = getValue(chars[0]);
+        int sum = 0;
+        for (int i = 1; i < chars.length; i++){
+            // 获取当前位的值
+            int num = getValue(chars[i]);
+            if (preNum < num){
+                // 前一位的数字小于当前位数字，则减去前一位的值
+                sum -= preNum; 
+            } else{
+                // 前一位的数字大于当前位数字，则加上前一位的值
+                sum += preNum;
+            }
+            // 更新最后前一位的值
+            preNum = num;
+        }
+        // 最后一位直接加上即可
+        sum += preNum;
+        return sum;
+    }
+    
+    public int getValue(char ch) {
+        switch(ch){
+            case 'I':   return 1;
+            case 'V':   return 5;
+            case 'X':   return 10;
+            case 'L':   return 50;
+            case 'C':   return 100;
+            case 'D':   return 500;
+            case 'M':   return 1000;
+            default:    return -1;
+        }
+    }
+}
+```
+
+执行结果：
+
+![image-20200902215855563](leetcode.assets/image-20200902215855563.png)
+
+
+
+
+
+## # 14 最长公共前缀
+
+### 问题描述
+
+```Java
+编写一个函数来查找字符串数组中的最长公共前缀。
+如果不存在公共前缀，返回空字符串 ""。
+
+示例 1:
+输入: ["flower","flow","flight"]
+输出: "fl"
+    
+示例 2:
+输入: ["dog","racecar","car"]
+输出: ""
+解释: 输入不存在公共前缀。
+    
+说明:
+所有输入只包含小写字母 a-z 。
+```
+
+### 解题思路
+
+两两直接对比
+
+示例代码：
+
+```Java
+class Solution {
+    public String longestCommonPrefix(String[] strs) {
+        if (strs == null || strs.length == 0){
+            return "";
+        }
+        // 取第一个字符串为公共前缀
+        String ans = strs[0];
+        // 每比较一个字符串更新一次 ans
+        for (int i = 1; i < strs.length; i++){
+            // 找出公共前缀长度
+            int j = 0;
+            while (j < Math.min(strs[i].length(), ans.length())) {
+                if (strs[i].charAt(j) != ans.charAt(j)){
+                    break; 
+                } 
+                j++;
+            }
+            if (j == 0){
+                return "";
+            }
+            // 更新 ans
+            ans = ans.substring(0, j);
+        }
+        return ans;
+    }
+}
+```
+
+执行结果：
+
+![image-20200902221845637](leetcode.assets/image-20200902221845637.png)
+
+
+
+## # 15 三数之和
+
+### 问题描述
+
+```Java
+给你一个包含 n 个整数的数组 nums，判断 nums 中是否存在三个元素 a，b，c ，使得 a + b + c = 0 ？请你找出所有满足条件且不重复的三元组。
+
+注意：答案中不可以包含重复的三元组。
+
+示例：
+给定数组 nums = [-1, 0, 1, 2, -1, -4]，
+
+满足要求的三元组集合为：
+[
+  [-1, 0, 1],
+  [-1, -1, 2]
+]
+    
+```
+
+### 解题思路
+
+数组排序后，用左右指针求解三数之和
+
+示例代码：
+
+```Java
+class Solution {
+    public List<List<Integer>> threeSum(int[] nums) {
+        LinkedList<List<Integer>> result = new LinkedList<>();
+        if (nums == null || nums.length < 3){
+            return result;
+        }
+        // 数组排序
+        Arrays.sort(nums);
+        int n = nums.length;
+        // 确定第一个数 i 的位置，最大为 nums[n-3] 
+        for (int i = 0; i < n - 2; i++) {
+            if (nums[i] > 0) break;     // 第一个数已经超出目标值 0，剪枝
+            if (i > 0 && nums[i] == nums[i-1]) continue;    // 去重
+            // 左右指针 i，k 的初始值
+            int j = i + 1;
+            int k = n - 1;
+            while (j < k){
+                // 比较三数之和与目标值的大小
+                int sum = nums[i] + nums[j] + nums[k];
+                if (sum < 0){
+                    // 当前三数之和小于目标值，左指针右移到第一个不重复的数
+                    while (j < k && nums[j] == nums[++j]);
+                } else if (sum > 0){
+                    // 当前三数之和大于目标值，右指针左移到第一个不重复的数
+                    while (j < k && nums[k] == nums[--k]);
+                } else {
+                    // 当前三数之和等于目标值，将当前三数保存
+                    result.add(new ArrayList<>(Arrays.asList(nums[i], nums[j], nums[k])));
+                    // 左右指针向中间移动
+                    while (j < k && nums[j] == nums[++j]);
+                    while (j < k && nums[k] == nums[--k]);
+                }
+            }
+        }
+        return result;
+    }
+}
+```
+
+执行结果：
+
+![image-20200905154529615](leetcode.assets/image-20200905154529615.png)
+
+
+
+## # 16 最接近的三数之和
+
+### 问题描述
+
+```Java
+给定一个包括 n 个整数的数组 nums 和 一个目标值 target。找出 nums 中的三个整数，使得它们的和与 target 最接近。返回这三个数的和。假定每组输入只存在唯一答案。
+
+示例：
+输入：nums = [-1,2,1,-4], target = 1
+输出：2
+解释：与 target 最接近的和是 2 (-1 + 2 + 1 = 2) 。
+ 
+
+提示：
+3 <= nums.length <= 10^3
+-10^3 <= nums[i] <= 10^3
+-10^4 <= target <= 10^4
+
+
+```
+
+
+
+### 解题思路
+
+数组排序，左右双指针，求三数之和与目标值差值的最小值
+
+示例代码：
+
+```Java
+class Solution {
+    public int threeSumClosest(int[] nums, int target) {
+        if(nums==null || nums.length < 3){
+            return -1;
+        }
+        // 数组排序
+        Arrays.sort(nums);
+        // 保存最小当前三数之和与目标值的差值
+        int min = Integer.MAX_VALUE;
+        // 确定第一个数
+        for (int i = 0; i < nums.length - 2; i++){
+            if (i > 0 && nums[i] == nums[i-1]) continue;    // 去重
+            // 左右指针初始值
+            int j = i + 1;
+            int k = nums.length - 1;
+            while (j < k){
+                int sum = nums[i] + nums[j] + nums[k];
+                if (sum < target){
+                    // 三数之和小于目标值
+                    // 更新 min
+                    min = Math.abs(min) < Math.abs(sum - target) ? min : sum - target;
+                    // 左指针右移到第一个非重复的数
+                    while (j < k && nums[j] == nums[++j]);
+                } else if (sum > target){
+                    // 更新 min
+                    min = Math.abs(min) < Math.abs(sum - target) ? min : sum - target;
+                    // 右指针左移到第一个非重复的数
+                    while (j < k && nums[k] == nums[--k]);
+                } else {
+                    // 找到目标值，直接返回当前值即可
+                    return sum;
+                }
+            }
+        }
+        // 目标值和差值的和就是三数之和
+        return target + min;
+    }
+}
+```
+
+执行结果：
+
+![image-20200905164246410](leetcode.assets/image-20200905164246410.png)
+
+## # 17 电话号码的字母组合
+
+### 问题描述
+
+给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。
+
+给出数字到字母的映射如下（与电话按键相同）。注意 1 不对应任何字母。
+
+![image-20200902224254546](leetcode.assets/image-20200902224254546.png)
+
+示例:
+
+输入："23"
+输出：["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"].
+说明:
+尽管上面的答案是按字典序排列的，但是你可以任意选择答案输出的顺序。
+
+
+
+### 解题思路
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public List<String> letterCombinations(String digits) {
+        if (digits == null || digits.length() == 0){
+            return new LinkedList<String>();
+        }
+        
+        LinkedList<String> result = new LinkedList<String>();
+        char[] chars = digits.toCharArray();
+        
+        // 获取第一个数字的字符串组合（字符串自身）
+        String[] strings = getValue(chars[0] - '0');
+        for (String temp : strings) {
+            result.addLast(temp);
+        }
+        
+        // 拼接字符串组合
+        for (int i = 1; i < chars.length; i++) {
+            // 当前已存在的组合个数
+            int times = result.size();
+            // 左右拼接
+            for (int j = 0; j < times; j++) {
+                String left = result.removeFirst();
+                String[] rightStrings = getValue(chars[i] - '0');
+                for (String right : rightStrings){
+                    result.addLast(left + right);
+                }
+            }
+        }
+        return result;        
+    }
+    
+    public String[] getValue(int n){
+        switch(n){
+            case 2: return new String[]{"a", "b", "c"};
+            case 3: return new String[]{"d", "e", "f"};
+            case 4: return new String[]{"g", "h", "i"};
+            case 5: return new String[]{"j", "k", "l"};
+            case 6: return new String[]{"m", "n", "o"};
+            case 7: return new String[]{"p", "q", "r", "s"};
+            case 8: return new String[]{"t", "u", "v"};
+            case 9: return new String[]{"w", "x", "y", "z"};
+            default: return null;
+        }
+    }
+}
+```
+
+执行结果：
+
+![image-20200902224158341](leetcode.assets/image-20200902224158341.png)
+
+
+
+## # 19 删除链表的倒数第N个节点
+
+### 问题描述
+
+```Java
+给定一个链表，删除链表的倒数第 n 个节点，并且返回链表的头结点。
+
+示例：
+给定一个链表: 1->2->3->4->5, 和 n = 2.
+当删除了倒数第二个节点后，链表变为 1->2->3->5.
+
+说明：
+给定的 n 保证是有效的。
+
+进阶：
+你能尝试使用一趟扫描实现吗？
+```
+
+
+
+### 解题思路
+
+**双指针法**
+
+右指针先走 N 步，左右指针再同步前进，当右指针指向链表尾结点时，左指针的 next 指向倒数第 N 个结点，直接删除即可。
+
+示例代码：
+
+```Java
+class Solution {
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        if (head == null){
+            return null;
+        }
+        // 伪头部，方便处理倒数第 N 个位头部结点
+        ListNode dummyHead = new ListNode();
+        dummyHead.next = head;
+        
+        ListNode left = dummyHead;
+        ListNode right = dummyHead;
+        
+        // 右指针先前进 n 步
+        while (n > 0 && right != null){
+            right = right.next;
+            n--;
+        }
+        if (right == null){
+            return null;
+        }
+        // 右指针一直前进到链表尾部，此时左指针的 next 指向的就是倒数第 N 个结点
+        while (right.next != null) {
+            right = right.next;
+            left = left.next;
+        }
+        // 删除倒数第 N 个结点
+        left.next = left.next.next;
+        
+        return dummyHead.next;
+    }
+}
+```
+
+执行结果：
+
+![image-20200904095713242](leetcode.assets/image-20200904095713242.png)
+
+
+
+## # 23 括号生成
+
+### 问题描述
+
+```Java
+数字 n 代表生成括号的对数，请你设计一个函数，用于能够生成所有可能的并且 有效的 括号组合。
+
+示例：
+输入：n = 3
+输出：[
+       "((()))",
+       "(()())",
+       "(())()",
+       "()(())",
+       "()()()"
+     ]
+
+```
+
+
+
+### 解题思路
+
+
+
+示例代码：
+
+```Java
+class Solution {
+    public List<String> generateParenthesis(int n) {
+        if (n == 0){
+            return new LinkedList<String>();
+        }
+        
+        LinkedList<String> result = new LinkedList<String>();
+        // 第一组括号
+        result.addLast("()");
+        n--;
+        // 循环插入，一次循环插入一组括号
+        while (n > 0){
+            // 保存当前链表中元素个数，表示循环次数
+            int times = result.size();
+            for (int i = 0; i < times; i++) {
+                // 在 str 字符串中的每个字符后插入括号 
+                String str = result.removeFirst();
+                for (int j = 1; j <= str.length(); j++){
+                    String temp = insertParentheses(str, j);  
+                    // 如果不存在这个组合，插入结果链表中
+                    if (!result.contains(temp)){
+                        result.addLast(temp);
+                    }
+                }
+            }
+            n--;
+        }
+        return result;        
+    }
+    
+    // 在所给位置位置插入一对括号
+    public String insertParentheses(String str, int index){
+        return str.substring(0, index) + "()" + str.substring(index, str.length());
+    }
+    
+}
+```
+
+执行结果：
+
+![image-20200902232148124](leetcode.assets/image-20200902232148124.png)
+
+## # 23 合并K个升序链表
+
+### 问题描述
+
+```Java
+给你一个链表数组，每个链表都已经按升序排列。
+请你将所有链表合并到一个升序链表中，返回合并后的链表。
+
+示例 1：
+输入：lists = [[1,4,5],[1,3,4],[2,6]]
+输出：[1,1,2,3,4,4,5,6]
+解释：链表数组如下：
+[
+  1->4->5,
+  1->3->4,
+  2->6
+]
+将它们合并到一个有序链表中得到。
+1->1->2->3->4->4->5->6
+    
+示例 2： 
+输入：lists = []
+输出：[]
+    
+示例 3：
+输入：lists = [[]]
+输出：[]
+ 
+
+提示：
+k == lists.length
+0 <= k <= 10^4
+0 <= lists[i].length <= 500
+-10^4 <= lists[i][j] <= 10^4
+lists[i] 按 升序 排列
+lists[i].length 的总和不超过 10^4
+    
+```
+
+### 解题思路
+
+优先级队列
+
+示例代码：
+
+```Java
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        if (lists == null || lists.length == 0){
+            return null;
+        }
+        
+        ListNode dummyHead = new ListNode();
+        ListNode current = dummyHead;
+        
+        // 优先级队列，传入自定义 Comparator
+        PriorityQueue<ListNode> queue = new PriorityQueue<>(
+            (node1, node2) -> node1.val - node2.val
+        );
+        // 将每个链表的头结点加入到优先级队列中
+        for (ListNode listHead : lists){
+            if (listHead == null){
+                continue;
+            }
+            queue.offer(listHead);
+        }
+        // 取出优先级队列的首个结点
+        while (!queue.isEmpty()){
+            ListNode nextNode = queue.poll();
+            current.next = nextNode;
+            current = current.next;
+            if (nextNode.next != null){
+                queue.offer(nextNode.next);
+            }
+        }
+        return dummyHead.next;
+    }
+}
+```
+
+执行结果
+
+![image-20200901230542159](leetcode.assets/image-20200901230542159.png)
+
+
+
+
+
+## # 28 实现 strStr()
+
+### 问题描述
+
+```Java
+实现 strStr() 函数。
+给定一个 haystack 字符串和一个 needle 字符串，在 haystack 字符串中找出 needle 字符串出现的第一个位置 (从0开始)。如果不存在，则返回  -1。
+
+示例 1:
+输入: haystack = "hello", needle = "ll"
+输出: 2
+    
+示例 2:
+输入: haystack = "aaaaa", needle = "bba"
+输出: -1
+    
+说明:
+当 needle 是空字符串时，我们应当返回什么值呢？这是一个在面试中很好的问题。
+对于本题而言，当 needle 是空字符串时我们应当返回 0 。这与C语言的 strstr() 以及 Java的 indexOf() 定义相符。
+```
+
+
+
+### 解题思路
+
+暴力法直接匹配
+
+示例代码：
+
+```Java
+class Solution {
+    public int strStr(String haystack, String needle) {
+        if (needle == null || needle.length() == 0){
+            return 0;
+        }
+        if (haystack == null || haystack.length() < needle.length()){
+            return -1;
+        }
+        
+        int i = 0;
+        int j = 0;        
+        // 两个指针分别指向 haystack 和 needle
+        while (i < haystack.length() && j < needle.length()) {
+            if (haystack.charAt(i) == needle.charAt(j)) {
+                // i，j 指向相同的字符，两个指针都前进一位
+                i++;
+                j++;
+            } else {
+                // i，j 指向不同的字符
+                // i 后退到本次匹配的个数后再前进一位
+                i = i - j + 1;
+                // j 指向 needle 起点
+                j = 0;
+            }
+        }
+        // 如果 j 指向 needle 最后一个字符，表明完全匹配
+        if (j == needle.length()){
+            return i - j;
+        }
+        return -1;
+        
+    }
+}
+```
+
+执行结果：
+
+![image-20200903115109345](leetcode.assets/image-20200903115109345.png)
+
+
+
+## # 38 外观数列
+
+### 问题描述
+
+```Java
+给定一个正整数 n（1 ≤ n ≤ 30），输出外观数列的第 n 项。
+注意：整数序列中的每一项将表示为一个字符串。
+「外观数列」是一个整数序列，从数字 1 开始，序列中的每一项都是对前一项的描述。前五项如下：
+1.     1
+2.     11
+3.     21
+4.     1211
+5.     111221
+    
+第一项是数字 1
+描述前一项，这个数是 1 即 “一个 1 ”，记作 11
+描述前一项，这个数是 11 即 “两个 1 ” ，记作 21
+描述前一项，这个数是 21 即 “一个 2 一个 1 ” ，记作 1211
+描述前一项，这个数是 1211 即 “一个 1 一个 2 两个 1 ” ，记作 111221
+
+示例 1:
+输入: 1
+输出: "1"
+解释：这是一个基本样例。
+    
+示例 2:
+输入: 4
+输出: "1211"
+解释：当 n = 3 时，序列是 "21"，其中我们有 "2" 和 "1" 两组，"2" 可以读作 "12"，也就是出现频次 = 1 而 值 = 2；类似 "1" 可以读作 "11"。所以答案是 "12" 和 "11" 组合在一起，也就是 "1211"。
+    
+```
+
+### 解题思路
+
+**双指针法**
+
+示例代码：
+
+```Java
+class Solution {
+    public String countAndSay(int n) {
+        if (n == 1){
+            return "1";
+        }
+        
+        String str = countAndSay(n-1);
+        StringBuilder sb = new StringBuilder();
+        int length = str.length();
+        int start = 0;
+        for (int i = 1; i <= length; i++){
+            if (i == length) {
+                // 最后一个字符，后续不会有对比，直接拼接
+                sb.append(i - start).append(str.charAt(start));
+            } else {
+                // i 的范围 (1, length - 1)
+                if (str.charAt(start) != str.charAt(i)){
+                    // 出现新字符，拼接后更新 start 为新字符下标
+                    sb.append(i - start).append(str.charAt(start));
+                    start = i;
+                }
+            }
+        }
+        return sb.toString();        
+    }
+}
+```
+
+执行结果：
+
+![image-20200903144743340](leetcode.assets/image-20200903144743340.png)
+
+
+
+## # 42 接雨水
+
+### 问题描述
+
+给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
+
+上面是由数组 [0,1,0,2,1,0,1,3,2,1,2,1] 表示的高度图，在这种情况下，可以接 6 个单位的雨水（蓝色部分表示雨水）。 感谢 Marcos 贡献此图。
+
+![image-20200901221850514](leetcode.assets/image-20200901221850514.png)
+
+示例:
+
+输入: [0,1,0,2,1,0,1,3,2,1,2,1]
+输出: 6
+
+
+
+### 解题思路
+
+单调栈
+
+示例代码：
+
+```Java
+class Solution {
+    public int trap(int[] height) {
+        if (height == null || height.length == 0){
+            return 0;
+        }
+        Deque<Integer> stack = new LinkedList<>();
+        int result = 0;
+        for (int i = 0; i < height.length; i++){
+            // 维护单调栈，将比栈中当前元素小的值弹出
+            while (!stack.isEmpty() && height[stack.peek()] < height[i]){
+                int bottomIndex = stack.pop();
+                // 如果栈顶元素一直相等，只留第一个栈顶元素
+                while (!stack.isEmpty() && height[stack.peek()] == height[bottomIndex]){
+                    stack.pop();
+                }
+                // 栈非空，累计雨水面积
+                if (!stack.isEmpty()){
+                    int width = i - stack.peek() - 1;
+                    int high = Math.min(height[stack.peek()], height[i]) - height[bottomIndex];
+                    result +=  width * high;
+                }
+            }
+            // 将 height 索引入栈
+            stack.push(i);
+        }
+        return result;
+    }
+}
+```
+
+执行结果：
+
+![image-20200901221816000](leetcode.assets/image-20200901221816000.png)
+
+
+
 ## # 43 字符串相乘
 
 ### 问题描述
@@ -5506,7 +6454,7 @@ class Solution {
 
 
 
-## # 43 字符串相加
+## # 415 字符串相加
 
 ### 问题描述
 
@@ -5576,6 +6524,150 @@ class Solution {
 
 
 [https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-hou-xu-bian-li-xu-lie-lcof/solution/dan-diao-di-zeng-zhan-by-shi-huo-de-xia-tian/]: 
+
+
+
+## # 49 字母异位词分组
+
+### 问题描述
+
+```Java
+给定一个字符串数组，将字母异位词组合在一起。字母异位词指字母相同，但排列不同的字符串。
+
+示例:
+输入: ["eat", "tea", "tan", "ate", "nat", "bat"]
+输出:
+[
+  ["ate","eat","tea"],
+  ["nat","tan"],
+  ["bat"]
+]
+
+说明：
+所有输入均为小写字母。
+不考虑答案输出的顺序。
+```
+
+### 解题思路
+
+**哈希表法**
+
+示例代码：
+
+```Java
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+        if (strs == null || strs.length == 0){
+            return new LinkedList<List<String>>();
+        }
+        // 哈希表，key 为 重排序后的字符串， value 为排序前的字符串
+        Map<String, ArrayList<String>> map = new HashMap<>();
+        for (String str : strs){
+            // 字符串重排序，生成新的字符串 key
+            char[] chars = str.toCharArray();
+            Arrays.sort(chars);
+            String key = String.valueOf(chars);
+            // 将原字符串存放到 哈希表中
+            if (!map.containsKey(key)) {
+                map.put(key, new ArrayList<>());
+            }
+            map.get(key).add(str);
+        }
+        
+        // 将哈希表中的值全部返回到 ArrayList 中
+        return new ArrayList(map.values());
+    }
+}
+```
+
+执行结果：
+
+![image-20200903153421044](leetcode.assets/image-20200903153421044.png)
+
+## # 76 最小覆盖子串
+
+### 问题描述
+
+```Java
+给你一个字符串 S、一个字符串 T 。请你设计一种算法，可以在 O(n) 的时间复杂度内，从字符串 S 里面找出：包含 T 所有字符的最小子串。
+
+示例：
+
+输入：S = "ADOBECODEBANC", T = "ABC"
+输出："BANC"
+    
+提示：
+如果 S 中不存这样的子串，则返回空字符串 ""。
+如果 S 中存在这样的子串，我们保证它是唯一的答案。
+
+```
+
+
+
+### 解题思路
+
+**滑动窗口法**
+
+示例代码：
+
+```Java
+class Solution {
+    public String minWindow(String s, String t) {
+        if (s == null || s.length() == 0){
+            return null;
+        }
+        
+        int start = 0, minLen = Integer.MAX_VALUE;
+        int left = 0, right = 0;
+        
+        // 两个计数器
+        // window 记录当前窗口中的字符个数
+        Map<Character, Integer> window = new HashMap<>();
+        // needs 记录目标字符串的字符个数
+        Map<Character, Integer> needs = new HashMap<>();
+        for (char c : t.toCharArray()){
+            needs.put(c, needs.getOrDefault(c, 0) + 1);
+        }
+        
+        // 记录 window 中已经有多少字符符合要求了
+        int match = 0;
+        
+        // 窗口右侧一直滑动到字符串尾
+        while (right < s.length()) {
+            // 窗口右边界向右移
+            char c1 = s.charAt(right);
+            if (needs.containsKey(c1)) {
+                // 加入 window
+                window.put(c1, window.getOrDefault(c1, 0)+1);
+                if (window.get(c1).equals(needs.get(c1))) {
+                    // 字符 c1 的出现次数符合要求了
+                    match++;
+                }
+            }
+            right++;
+            
+            // window 中的字符串已符合 needs 的要求了
+            while (match == needs.size()) {
+                // 更新结果最小字串的位置和长度
+                if (right - left < minLen){
+                    start = left;
+                    minLen = right - left;
+                }
+                // 窗口左边界向右移
+                char c2 = s.charAt(left);
+                if (needs.containsKey(c2)) {
+                    window.put(c2, window.getOrDefault(c2, 0) - 1);
+                    if (window.get(c2) < needs.get(c2)){
+                        match--;
+                    }
+                }
+                left++;
+            }
+        }
+        return minLen == Integer.MAX_VALUE ? "" : s.substring(start, start + minLen);
+    }               
+}
+```
 
 
 
@@ -6318,6 +7410,670 @@ class Solution {
 
 
 
+## # 124 二叉树
+
+### 问题描述
+
+```Java
+给定一个非空二叉树，返回其最大路径和。
+本题中，路径被定义为一条从树中任意节点出发，沿父节点-子节点连接，达到任意节点的序列。该路径至少包含一个节点，且不一定经过根节点。
+
+示例 1：
+输入：[1,2,3]
+
+       1
+      / \
+     2   3
+输出：6
+
+示例 2：
+输入：[-10,9,20,null,null,15,7]
+   -10
+   / \
+  9  20
+    /  \
+   15   7
+输出：42
+```
+
+
+
+### 解题思路
+
+**深度优先遍历**
+
+计算每个结点的左右子孩子对路径的贡献值，负数或 0 视为无贡献。一个结点的贡献值为当前结点值加上左右孩子的贡献的较大值。
+
+更新 `result = Math.max(result, root.val + left + right)`。
+
+示例代码：
+
+```java
+class Solution {
+    private int result = Integer.MIN_VALUE;
+    public int maxPathSum(TreeNode root) {
+        dfs(root);
+        return result;
+    }
+    
+    public int dfs(TreeNode root){
+        if (root == null){
+            return 0;
+        }
+        // 计算左右孩子的贡献，负数或为 0 视为无贡献
+        int left = Math.max(0, dfs(root.left));
+        int right = Math.max(0, dfs(root.right));
+        // 更新最大路径和
+        result = Math.max(result, root.val + left + right);
+        // 返回当前结点的最大贡献值：当前结点值 + 左右孩子贡献的较大值
+        return root.val + Math.max(left, right);
+    }
+}
+```
+
+执行结果：
+
+
+
+
+
+## # 125 验证回文串
+
+### 问题描述
+
+```Java
+给定一个字符串，验证它是否是回文串，只考虑字母和数字字符，可以忽略字母的大小写。
+说明：本题中，我们将空字符串定义为有效的回文串。
+
+示例 1:
+输入: "A man, a plan, a canal: Panama"
+输出: true
+
+示例 2:
+输入: "race a car"
+输出: false
+```
+
+
+
+### 解题思路
+
+利用辅助栈
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean isPalindrome(String s) {
+        if (s == null || s.length() == 0){
+            return true;
+        }
+        // 将字符串转换为小写字符，到处字符数组
+        char[] chars = s.toLowerCase().toCharArray();
+        // 左右双指针
+        int i = 0;
+        int j = chars.length - 1;
+        
+        while (i < j){
+            // 左指针指向非法字符，向右移一位
+            while (i < j && !(Character.isLetter(chars[i]) || Character.isDigit(chars[i]))) {
+                i++;
+            }
+            // 右指针指向非法字符，向左移一位
+            while (i < j && !(Character.isLetter(chars[j]) || Character.isDigit(chars[j]))) {
+                j--;
+            }
+            
+            // 左右指针所指字符不同，非回文串
+            if (chars[i] != chars[j]) {
+                return false;
+            }
+            // 更新字符串
+            i++;
+            j--;
+        }
+        // 左右指针连续或间隔一位，表示是合法回文串
+        return true;
+    }
+}
+```
+
+执行结果：
+
+![image-20200903195240384](leetcode.assets/image-20200903195240384.png)
+
+
+
+### # 148 链表排序
+
+### 问题描述
+
+```Java
+在 O(n log n) 时间复杂度和常数级空间复杂度下，对链表进行排序。
+
+示例 1:
+输入: 4->2->1->3
+输出: 1->2->3->4
+    
+示例 2:
+输入: -1->5->3->4->0
+输出: -1->0->3->4->5
+    
+```
+
+### 解题思路
+
+**归并排序法**
+
+实例代码：
+
+```Java
+class Solution {
+    // 归并排序
+    public ListNode sortList(ListNode head) {
+        if (head == null || head.next == null) {
+            return head;
+        }
+        
+        ListNode pre = head;
+        ListNode fast = head;
+        ListNode slow = head;
+        
+        // 快慢指针，快指针遍历完链表时，慢指针指向链表中点
+        while (fast != null && fast.next != null){
+            fast = fast.next.next;
+            // 记录慢结点的前序结点
+            pre = slow;
+            slow = slow.next;
+        }
+        // 慢指针指向链表中点，将它作为后半部链表的开始
+        // 它的前序结点 pre 后继指向 null
+        pre.next = null;
+        ListNode left = sortList(head);
+        ListNode right = sortList(slow);
+        return merge(left, right);
+    }
+    
+    // 合并两个有序链表
+    public ListNode merge(ListNode pHead, ListNode qHead){
+        if (pHead == null) return qHead;
+        if (qHead == null) return pHead;
+        
+        // 伪头结点
+        ListNode dummyHead = new ListNode();
+        ListNode current = dummyHead;
+        while (pHead != null && qHead != null){
+            if (pHead.val < qHead.val){
+                current.next = pHead;
+                pHead = pHead.next;
+            } else {
+                current.next = qHead;
+                qHead = qHead.next;
+            }
+            current = current.next;
+        }
+        // p 链表有剩余
+        while (pHead != null){
+            current.next = pHead;
+            pHead = pHead.next;
+            current = current.next;
+        }
+        // q 链表有剩余
+        while (qHead != null){
+            current.next = qHead;
+            qHead = qHead.next;
+            current = current.next;
+        }
+        
+        return dummyHead.next;
+    }
+}
+```
+
+执行结果：
+
+![image-20200904145640699](leetcode.assets/image-20200904145640699.png)
+
+
+
+### 问题描述
+
+给定一个链表，每个节点包含一个额外增加的随机指针，该指针可以指向链表中的任何节点或空节点。
+
+要求返回这个链表的 深拷贝。 
+
+我们用一个由 n 个节点组成的链表来表示输入/输出中的链表。每个节点用一个 [val, random_index] 表示：
+
+val：一个表示 Node.val 的整数。
+random_index：随机指针指向的节点索引（范围从 0 到 n-1）；如果不指向任何节点，则为  null 。
+
+
+示例 1：
+
+![image-20200904182045352](leetcode.assets/image-20200904182045352.png)
+
+输入：head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
+输出：[[7,null],[13,0],[11,4],[10,2],[1,0]]
+示例 2：
+
+![image-20200904182054568](leetcode.assets/image-20200904182054568.png)
+
+输入：head = [[1,1],[2,1]]
+输出：[[1,1],[2,1]]
+示例 3：
+
+![image-20200904182105944](leetcode.assets/image-20200904182105944.png)
+
+输入：head = [[3,null],[3,0],[3,null]]
+输出：[[3,null],[3,0],[3,null]]
+示例 4：
+
+输入：head = []
+输出：[]
+解释：给定的链表为空（空指针），因此返回 null。
+
+
+提示：
+
+-10000 <= Node.val <= 10000
+Node.random 为空（null）或指向链表中的节点。
+节点数目不超过 1000 。
+
+### 解题思路
+
+**哈希表法**
+
+示例代码：
+
+```Java
+class Solution {
+    public Node copyRandomList(Node head) {
+        if (head == null){
+            return null;
+        }
+        // 利用哈希表存放原链表结点和它的深拷贝结点<key, value> == <origin, copy>
+        Map<Node, Node> map = new HashMap<>();
+        Node current = head;
+        Node copy;
+        // 赋值链表并加入到哈希表中
+        while (current != null){
+            copy = new Node(current.val);
+            map.put(current, copy);
+            current = current.next;
+        }
+        // 将拷贝结点连接成链表    
+        current = head;
+        while (current != null){
+            map.get(current).next = map.get(current.next);
+            map.get(current).random = map.get(current.random);
+            current = current.next;
+        }
+        
+        return map.get(head);
+    }
+}
+```
+
+执行结果：
+
+![image-20200904181936753](leetcode.assets/image-20200904181936753.png)
+
+
+
+## # 150 逆波兰表达式求值  
+
+### 问题描述
+
+```Java
+根据 逆波兰表示法，求表达式的值。
+
+有效的运算符包括 +, -, *, / 。每个运算对象可以是整数，也可以是另一个逆波兰表达式。
+
+说明：
+整数除法只保留整数部分。
+给定逆波兰表达式总是有效的。换句话说，表达式总会得出有效数值且不存在除数为 0 的情况。
+ 
+示例 1：
+输入: ["2", "1", "+", "3", "*"]
+输出: 9
+解释: 该算式转化为常见的中缀算术表达式为：((2 + 1) * 3) = 9
+    
+示例 2：
+输入: ["4", "13", "5", "/", "+"]
+输出: 6
+解释: 该算式转化为常见的中缀算术表达式为：(4 + (13 / 5)) = 6
+    
+示例 3：
+输入: ["10", "6", "9", "3", "+", "-11", "*", "/", "*", "17", "+", "5", "+"]
+输出: 22
+解释: 
+该算式转化为常见的中缀算术表达式为：
+  ((10 * (6 / ((9 + 3) * -11))) + 17) + 5
+= ((10 * (6 / (12 * -11))) + 17) + 5
+= ((10 * (6 / -132)) + 17) + 5
+= ((10 * 0) + 17) + 5
+= (0 + 17) + 5
+= 17 + 5
+= 22
+ 
+
+逆波兰表达式：
+逆波兰表达式是一种后缀表达式，所谓后缀就是指算符写在后面。
+
+平常使用的算式则是一种中缀表达式，如 ( 1 + 2 ) * ( 3 + 4 ) 。
+该算式的逆波兰表达式写法为 ( ( 1 2 + ) ( 3 4 + ) * ) 。
+    
+逆波兰表达式主要有以下两个优点：
+去掉括号后表达式无歧义，上式即便写成 1 2 + 3 4 + * 也可以依据次序计算出正确结果。
+适合用栈操作运算：遇到数字则入栈；遇到算符则取出栈顶两个数字进行计算，并将结果压入栈中。    
+```
+
+
+
+### 解题思路
+
+利用辅助栈
+
+示例代码：
+
+```Java
+class Solution {
+    public int evalRPN(String[] tokens) {
+        if (tokens == null || tokens.length == 0){
+            return 0;
+        }
+        Deque<Integer> stack = new LinkedList<>(); 
+        int result;
+        for (String token : tokens){
+            // 如果是操作符，计算结果并入栈
+            if (token.equals("+")){
+                result = stack.pop() + stack.pop();
+                stack.push(result);
+            } else if (token.equals("-")){
+                // - 不满足交换律，保留被减数
+                int temp = stack.pop();
+                result = stack.pop() - temp;
+                stack.push(result);
+            } else if (token.equals("*")){
+                result = stack.pop() * stack.pop();
+                stack.push(result);
+            } else if (token.equals("/")){
+                // / 不满足交换律，保留被除数
+                int temp = stack.pop();
+                result = stack.pop() / temp;
+                stack.push(result);
+            } else {
+                // 如果是操作数，则直接入栈
+                stack.push(Integer.valueOf(token));
+            }
+        }
+        return stack.pop();
+    }
+}
+```
+
+执行结果：
+
+![image-20200901211421546](leetcode.assets/image-20200901211421546.png)
+
+
+
+## # 155 最小栈
+
+### 问题描述
+
+```Java
+设计一个支持 push ，pop ，top 操作，并能在常数时间内检索到最小元素的栈。
+
+push(x) —— 将元素 x 推入栈中。
+pop() —— 删除栈顶的元素。
+top() —— 获取栈顶元素。
+getMin() —— 检索栈中的最小元素。 
+
+示例:
+输入：
+["MinStack","push","push","push","getMin","pop","top","getMin"]
+[[],[-2],[0],[-3],[],[],[],[]]
+
+输出：
+[null,null,null,null,-3,null,0,-2]
+
+解释：
+MinStack minStack = new MinStack();
+minStack.push(-2);
+minStack.push(0);
+minStack.push(-3);
+minStack.getMin();   --> 返回 -3.
+minStack.pop();
+minStack.top();      --> 返回 0.
+minStack.getMin();   --> 返回 -2.
+ 
+
+提示：
+pop、top 和 getMin 操作总是在 非空栈 上调用。
+```
+
+
+
+### 解题思路
+
+元素入栈：元素入栈前，先将当前的最小值入栈保存；
+
+元素出栈：元素出栈后，恢复存放在栈中的最小值。
+
+示例代码：
+
+```Java
+class MinStack {
+    
+    Deque<Integer> stack;
+    int min = Integer.MAX_VALUE;
+    
+    /** initialize your data structure here. */
+    public MinStack() {
+        stack = new LinkedList<>();
+    }
+    
+    public void push(int x) {
+        // 保留当前最小值
+        stack.push(min);
+        // 更新最小值
+        min = Math.min(min, x);
+        // 元素入栈
+        stack.push(x);
+    }
+    
+    public void pop() {
+        // 弹出元素
+        stack.pop();
+        // 恢复当前栈中的最小值
+        min = stack.pop();
+    }
+    
+    public int top() {
+        return stack.peek();
+    }
+    
+    public int getMin() {
+        return min;
+    }
+}
+
+```
+
+执行结果：
+
+![image-20200901205343385](leetcode.assets/image-20200901205343385.png)
+
+
+
+## # 206 反转链表
+
+### 问题描述
+
+```Java
+反转一个单链表。
+
+示例:
+输入: 1->2->3->4->5->NULL
+输出: 5->4->3->2->1->NULL
+    
+进阶:
+你可以迭代或递归地反转链表。你能否用两种方法解决这道题？
+```
+
+### 解题思路
+
+**递归法**
+
+base case：当前链表为 null 或 链表只有一个结点，返回当前链表。 
+
+1. 递归获取以当前结点后继开始的链表的逆转后的头结点；
+2. 遍历逆转后的链表，找到逆转链表的尾结点；
+3. 尾结点后插入当前结点；
+4. 当前结点变成新的尾结点，后继设为 null。
+
+示例代码：
+
+```Java
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        if (head == null || head.next == null){
+            return head;
+        }
+        // 递归调用，获取以当前结点后继开始的链表的逆转后的头结点
+        ListNode reversedHead = reverseList(head.next);
+        // 找到逆转后链表的尾结点
+        ListNode current = reversedHead;
+        while (current.next != null){ 
+            current = current.next;
+        }
+        // 尾结点后插入当前结点
+        current.next = head;
+        // 当前结点为新的尾结点，后继设为 null
+        head.next = null;
+        return reversedHead;
+    }
+}
+```
+
+执行结果：
+
+![image-20200904155400531](leetcode.assets/image-20200904155400531.png)
+
+
+
+**迭代法**
+
+示例代码：
+
+```Java
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        if (head == null || head.next == null){
+            return head;
+        }
+        
+        ListNode previous = null;
+        ListNode current = head;
+        while (current != null){
+            // 保存后继结点，用于后移
+            ListNode next = current.next;
+            // 逆转
+            current.next = previous;
+            // 后移
+            previous = current;
+            current = next;
+        }
+        // 返回原链表的尾结点，也就是逆转链表的头结点
+        return previous;
+    }
+}
+```
+
+执行结果：
+
+![image-20200904161947930](leetcode.assets/image-20200904161947930.png)
+
+## # 215 数组中的第K个最大元素
+
+### 问题描述
+
+```Java
+在未排序的数组中找到第 k 个最大的元素。请注意，你需要找的是数组排序后的第 k 个最大的元素，而不是第 k 个不同的元素。
+示例 1:
+输入: [3,2,1,5,6,4] 和 k = 2
+输出: 5
+    
+示例 2:
+输入: [3,2,3,1,2,4,5,5,6] 和 k = 4
+输出: 4
+    
+说明:
+你可以假设 k 总是有效的，且 1 ≤ k ≤ 数组的长度。    
+```
+
+
+
+### 解题思路
+
+**堆排序法**
+
+示例代码：
+
+```Java
+class Solution {
+    public int findKthLargest(int[] nums, int k) {
+        if (nums == null || nums.length == 0){
+            return -1;    
+        }
+        int length = nums.length;
+        buildMaxHeap(nums, length);
+        // 堆排序，本题只需要排出第 K 大即可，循环 k 次
+        for (int i = nums.length - 1; i >= nums.length - k; i--){
+            swap(nums, 0, i);
+            length--;
+            heapify(nums, 0, length);
+        }
+        return nums[nums.length-k];
+    }
+    
+    // 创建最大堆
+    public void buildMaxHeap(int[] nums, int length){
+        for (int i = length / 2; i >= 0; i--){
+            heapify(nums, i, length);
+        }
+    }
+    
+    // 维护最大堆
+    public void heapify(int[] nums, int i, int length){
+        int largest = i;
+        int left = i * 2;
+        int right = i * 2 + 1;
+        if (left < length && nums[largest] < nums[left]){
+            largest = left;
+        }
+        if (right < length && nums[largest] < nums[right]){
+            largest = right;
+        }
+        if (i != largest){
+            swap(nums, i, largest);
+            heapify(nums, largest, length);
+        }
+    }
+    
+    public void swap(int[] nums, int a, int b){
+        int temp = nums[a];
+        nums[a] = nums[b];
+        nums[b] = temp;
+    }
+}
+```
+
+执行结果：
+
+![image-20200901233443343](leetcode.assets/image-20200901233443343.png)
+
 
 
 ## # 230 二叉搜索树中第K小的元素
@@ -6394,6 +8150,84 @@ class Solution {
 
 ![image-20200831212205031](leetcode.assets/image-20200831212205031.png)
 
+## #234 回文链表
+
+### 问题描述
+
+```Java
+请判断一个链表是否为回文链表。
+
+示例 1:
+输入: 1->2
+输出: false
+    
+示例 2:
+输入: 1->2->2->1
+输出: true
+```
+
+
+
+### 解题思路
+
+**快慢双指针**
+
+先用快慢指针找到中心结点。快指针走到链表尾部时，慢指针刚好走到中心结点。找中心结点的同时，利用慢指针将前半段链表逆转。逆转后再判断前半段和后半段是否一致。如果一致，则原链表为回文链表。
+
+注意：
+
+* 当链表长度为偶数时，后半段链表由中心结点开始；
+* 当链表长度为奇数时，后半段链表由中心结点的后继开始；
+
+示例代码：
+
+``` Java
+class Solution {
+    public boolean isPalindrome(ListNode head) {
+        if (head == null || head.next == null){
+            return true;
+        }
+        
+        // 快慢双指针找到中心结点
+        ListNode fast = head;
+        ListNode slow = head;
+        
+        ListNode previous = null;
+        // 快指针到链尾时，慢指针指向链表中心位置
+        while (fast != null && fast.next != null){
+            fast = fast.next.next;
+            // 逆转慢指针走过的结点
+            ListNode tempNext = slow.next;
+            slow.next = previous;
+            previous = slow;
+            slow = tempNext;
+        }
+            // 只要判断中点后半段链表与前半段逆转的结点是否一致即可
+        return isSameList(previous, slow)           // 当链表长度为偶数时
+            || isSameList(previous, slow.next);     // 当链表长度为奇数时
+    }
+    
+    // 判断两个链表是否一致
+    public boolean isSameList(ListNode list1, ListNode list2){
+        while (list1 != null && list2 != null){
+            if (list1.val != list2.val){
+                return false;
+            }
+            list1 = list1.next;
+            list2 = list2.next;
+        }
+        if (list1 != null || list2 != null){
+            return false;
+        }
+        return true;
+    }
+}
+```
+
+执行结果：
+
+![image-20200904164056703](leetcode.assets/image-20200904164056703.png)
+
 
 
 ## # 236 二叉树的最近公共祖先
@@ -6461,6 +8295,207 @@ class Solution {
 
 ![image-20200831213411571](leetcode.assets/image-20200831213411571.png)
 
+
+
+## # 237 删除链表中的节点
+
+### 问题描述
+
+``` Java
+请编写一个函数，使其可以删除某个链表中给定的（非末尾）节点。传入函数的唯一参数为 要被删除的节点 。
+ 现有一个链表 -- head = [4,5,1,9]，它可以表示为:
+
+示例 1：
+输入：head = [4,5,1,9], node = 5
+输出：[4,1,9]
+解释：给定你链表中值为 5 的第二个节点，那么在调用了你的函数之后，该链表应变为 4 -> 1 -> 9.
+
+示例 2：输入：head = [4,5,1,9], node = 1
+输出：[4,5,9]
+解释：给定你链表中值为 1 的第三个节点，那么在调用了你的函数之后，该链表应变为 4 -> 5 -> 9.
+```
+
+### 解题思路
+
+示例代码：
+
+```Java
+class Solution {
+    public void deleteNode(ListNode node) {
+        node.val = node.next.val;
+        node.next = node.next.next;
+    }
+}
+```
+
+执行结果：
+
+![image-20200904165726989](leetcode.assets/image-20200904165726989.png)
+
+## # 239 滑动窗口最大值
+
+### 问题描述
+
+```Java
+给定一个数组 nums，有一个大小为 k 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 k 个数字。滑动窗口每次只向右移动一位。
+
+返回滑动窗口中的最大值。
+
+进阶：
+你能在线性时间复杂度内解决此题吗？
+
+示例:
+输入: nums = [1,3,-1,-3,5,3,6,7], 和 k = 3
+输出: [3,3,5,5,6,7] 
+解释: 
+
+  滑动窗口的位置                最大值
+---------------               -----
+[1  3  -1] -3  5  3  6  7       3
+ 1 [3  -1  -3] 5  3  6  7       3
+ 1  3 [-1  -3  5] 3  6  7       5
+ 1  3  -1 [-3  5  3] 6  7       5
+ 1  3  -1  -3 [5  3  6] 7       6
+ 1  3  -1  -3  5 [3  6  7]      7
+ 
+提示：
+1 <= nums.length <= 10^5
+-10^4 <= nums[i] <= 10^4
+1 <= k <= nums.length      
+```
+
+### 解题思路
+
+单调队列，保持队首元素是最大元素。插入一个元素 n 时将队尾中比 n 小的元素均删除，保证队列元素大小递减。
+
+示例代码：
+
+```Java
+class Solution {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        if (nums == null || nums.length == 0){
+            return null;
+        }
+        
+        int[] res = new int[nums.length - k + 1];
+        int index = 0;
+        // 单调队列
+        MonotonicQueue window = new MonotonicQueue();
+        
+        for (int i = 0; i < nums.length; i++) {
+            if (i < k - 1){
+                // 窗口的前 k - 1 个元素
+                window.offer(nums[i]);
+            } else {
+                // 队尾插入新元素
+                window.offer(nums[i]);
+                // 取当前窗口的最大值
+                res[index++] = window.max();
+                // 删除队首元素
+                window.poll(nums[i - k + 1]);
+            }
+        }
+        return res;
+    }
+}
+
+// 单调队列
+class MonotonicQueue {
+    private Deque<Integer> data = new LinkedList<>();
+    
+    // 队尾元素添加 n
+    public void offer(int n){
+        while (!data.isEmpty() && data.getLast() < n){
+            data.removeLast();
+        }
+        data.offer(n);
+    }
+    
+    // 返回当前队列的最大值
+    public int max() {
+        return data.getFirst();
+    }
+    
+    // 队头元素如果是 n，删除它
+    public void poll(int n){
+        // 如果 n 之前已经被弹出，无需删除
+        if (!data.isEmpty() && data.getFirst() == n){
+            data.removeFirst();
+        }
+    }
+}
+```
+
+执行结果：
+
+![image-20200902193632931](leetcode.assets/image-20200902193632931.png)
+
+
+
+## # 257 二叉树的所有路径
+
+### 问题描述
+
+```Java
+给定一个二叉树，返回所有从根节点到叶子节点的路径。
+说明: 叶子节点是指没有子节点的节点。
+
+示例:
+输入:
+   1
+ /   \
+2     3
+ \
+  5
+
+输出: ["1->2->5", "1->3"]
+解释: 所有根节点到叶子节点的路径为: 1->2->5, 1->3
+    
+```
+
+
+
+### 解题思路
+
+**前序遍历 DFS**
+
+```Java
+class Solution {
+    LinkedList<String> result = new LinkedList<>();
+    
+    public List<String> binaryTreePaths(TreeNode root) {
+        if (root == null){
+            return new LinkedList<String>();
+        }
+        
+        solve(root, "");
+        return result;
+    }
+    
+    // 前序遍历
+    public void solve(TreeNode root, String current){ 
+        // 遍历到了叶子结点，路径入栈
+        if (root.left == null && root.right == null){
+            current += root.val;  
+            result.add(current);
+        }
+        current += root.val + "->";  
+        if (root.left != null){
+            // 遍历左子树
+            solve(root.left, current);
+        } 
+        if (root.right != null){
+            // 遍历右子树
+            solve(root.right, current);
+        }
+    }
+}
+```
+
+执行结果：
+
+![image-20200904193149906](leetcode.assets/image-20200904193149906.png)
+
 ## # 285 二叉搜索树中的顺序后继
 
 ### 问题描述
@@ -6526,3 +8561,357 @@ class Solution {
 执行结果：
 
 ![image-20200831222659227](leetcode.assets/image-20200831222659227.png)
+
+
+
+## # 328 奇偶链表
+
+### 问题描述
+
+```Java
+给定一个单链表，把所有的奇数节点和偶数节点分别排在一起。请注意，这里的奇数节点和偶数节点指的是节点编号的奇偶性，而不是节点的值的奇偶性。
+请尝试使用原地算法完成。你的算法的空间复杂度应为 O(1)，时间复杂度应为 O(nodes)，nodes 为节点总数。
+
+示例 1:
+输入: 1->2->3->4->5->NULL
+输出: 1->3->5->2->4->NULL
+    
+示例 2:
+输入: 2->1->3->5->6->4->7->NULL 
+输出: 2->3->6->7->1->5->4->NULL
+    
+说明:
+应当保持奇数节点和偶数节点的相对顺序。
+链表的第一个节点视为奇数节点，第二个节点视为偶数节点，以此类推。
+    
+```
+
+### 解题思路
+
+示例代码：
+
+```Java
+class Solution {
+    public ListNode oddEvenList(ListNode head) {
+        if (head == null || head.next == null){
+            return head;
+        }
+        // odd 链表尾
+        ListNode odd = head;
+        // even 链表头
+        ListNode evenHead = head.next;
+        // even 链表尾
+        ListNode even = evenHead;
+        // 将链表拆分尾奇偶两个链表
+        while (odd.next != null && even.next != null){
+            // odd 尾指向下一个 odd 结点
+            odd.next = even.next;
+            odd = odd.next;
+            // even 尾指向下一个 even 结点
+            even.next = odd.next;
+            even = even.next;
+        }
+        // odd 尾后继指向 even 头
+        odd.next = evenHead;
+        return head;
+    }
+}
+```
+
+执行结果：
+
+![image-20200904180023979](leetcode.assets/image-20200904180023979.png)
+
+## # 387 字符串中的第一个唯一字符
+
+### 问题描述
+
+```Java
+给定一个字符串，找到它的第一个不重复的字符，并返回它的索引。如果不存在，则返回 -1。
+示例：
+s = "leetcode"
+返回 0
+s = "loveleetcode"
+返回 2
+    
+提示：你可以假定该字符串只包含小写字母。
+```
+
+
+
+### 解题思路
+
+**哈希表法**
+
+示例代码：
+
+```Java
+class Solution {
+    public int firstUniqChar(String s) {
+        if (s == null || s.length() == 0){
+            return -1;
+        }
+        
+        char[] chars = s.toCharArray();
+        // 使用哈希表记录字符出现次数
+        Map<Character, Integer> map = new HashMap<>();
+        for (char c : chars){
+            map.put(c, map.getOrDefault(c, 0) + 1);
+        }
+        // 从前向后找出第一个出现次数为 1 的字符的索引
+        for (int i = 0; i < s.length(); i++){
+            if (map.get(chars[i]) == 1){
+                return i;
+            }
+        }
+        return -1;
+    }
+}
+```
+
+执行结果：
+
+![image-20200903231336228](leetcode.assets/image-20200903231336228.png)
+
+## # 541 反转字符串 II
+
+### 问题描述
+
+```Java
+给定一个字符串 s 和一个整数 k，你需要对从字符串开头算起的每隔 2k 个字符的前 k 个字符进行反转。
+
+如果剩余字符少于 k 个，则将剩余字符全部反转。
+如果剩余字符小于 2k 但大于或等于 k 个，则反转前 k 个字符，其余字符保持原样。
+ 
+示例:
+输入: s = "abcdefg", k = 2
+输出: "bacdfeg"
+ 
+提示：
+该字符串只包含小写英文字母。
+给定字符串的长度和 k 在 [1, 10000] 范围内。
+```
+
+
+
+### 解题思路
+
+**非递归双指针法**
+
+示例代码：
+
+```Java
+class Solution {
+    public String reverseStr(String s, int k) {
+        if (s == null || s.length() == 0){
+            return s;
+        }
+        char[] chars = s.toCharArray();
+        int start = 0;
+        int end = 0;
+        
+        int times = s.length() / (2 * k);
+        int rem = s.length() % (2 * k);        
+        // 循环处理每 2k 个字符
+        for (int i = 0; i < times; i++){
+            start = i * 2 * k;
+            end = start + k;
+            reverse(chars, start, end);
+        }
+        // 处理最后一段剩余的小于 2k 的字符
+        if (rem>0 && rem <= k){
+            // 剩余字符少于 k 个
+            start = times * 2 * k;
+            end = start + rem;
+            reverse(chars, start, end);
+        } else if (rem > k){
+            // 剩余字符小于 2k 但大于或等于 k 个
+            start = times * 2 * k;
+            end = start + k;
+            reverse(chars, start, end);
+        }
+        return new String(chars, 0, chars.length);
+    }
+    
+    // 反转 [start, end) 之间的字符
+    public void reverse(char[] s, int start, int end) {
+        if (s == null || s.length == 0){
+            return;
+        }
+        int i = start;
+        int j = end - 1;
+        while (i < j){
+            swap(s, i, j);
+            i++;
+            j--;
+        }
+    }
+    
+    public void swap(char[] s, int i , int j){
+        char temp = s[i];
+        s[i] = s[j];
+        s[j] = temp;
+    }
+}
+```
+
+执行结果
+
+![image-20200903210246207](leetcode.assets/image-20200903210246207.png)
+
+
+
+## # 653 两数之和 IV 
+
+### 问题描述
+
+```Java
+给定一个二叉搜索树和一个目标结果，如果 BST 中存在两个元素且它们的和等于给定的目标结果，则返回 true。
+
+案例 1:
+输入: 
+    5
+   / \
+  3   6
+ / \   \
+2   4   7
+
+Target = 9
+输出: True
+ 
+
+案例 2:
+输入: 
+    5
+   / \
+  3   6
+ / \   \
+2   4   7
+
+Target = 28
+输出: False
+```
+
+
+
+### 解题思路
+
+
+
+求出二叉搜索树的中序遍历序列，前后双指针
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean findTarget(TreeNode root, int k) {
+        if (root == null){
+            return false;
+        }
+        // 存放二叉搜索树的中序遍历序列，是一个递增序列
+        LinkedList<Integer> inorder = new LinkedList<>();
+        Deque<TreeNode> stack = new LinkedList<>();
+        TreeNode current = root;
+        // 中序遍历序列
+        while (current != null || !stack.isEmpty()){
+            if (current != null){
+                stack.push(current);
+                current = current.left;
+            } else{
+                current = stack.pop();
+                inorder.addLast(current.val);
+                current = current.right;
+            }
+        }
+        
+        // 前后双指针求两数之和
+        int i = 0;
+        int j = inorder.size() - 1;
+        while (i < j){
+            int sum = inorder.get(i) + inorder.get(j);
+            if (sum == k){
+                return true;
+            } else if (sum < k){
+                i++;
+            } else{
+                j--;
+            }
+        }
+        return false;
+    }
+}
+```
+
+执行结果：
+
+![image-20200904201008616](leetcode.assets/image-20200904201008616.png)
+
+## # 680 验证回文字符串 II
+
+### 问题描述
+
+```Java
+给定一个非空字符串 s，最多删除一个字符。判断是否能成为回文字符串。
+
+示例 1:
+输入: "aba"
+输出: True
+    
+示例 2:
+输入: "abca"
+输出: True
+解释: 你可以删除c字符。
+    
+注意:
+字符串只包含从 a-z 的小写字母。字符串的最大长度是50000。
+```
+
+### 解题思路
+
+**双指针法**
+
+示例代码：
+
+```Java
+class Solution {
+    public boolean validPalindrome(String s) {
+        if (s == null || s.length() == 0){
+            return true;
+        }        
+        char[] chars = s.toCharArray();
+        
+        return isPalindrome(chars, 0, chars.length - 1, true);
+    }
+    
+    // 判断是否是回文串，chance 为 true 时有一次删除机会
+    public boolean isPalindrome(char[] chars, int start, int end, boolean chance){
+        int i = start;
+        int j = end;
+        while (i < j) {
+            if (chars[i] != chars[j]) {
+                // 遇到不同得字符，判断当前是否右删除机会
+                if (!chance) {
+                    // 没有删除机会，为非法回文串
+                    return false;
+                } 
+                boolean left= false;
+                boolean right = false;
+                // 删除左指针指向字符后剩余部分是否为合法回文串
+                left = isPalindrome(chars, i+1, j, false);
+                // 删除左指针指向字符后剩余部分是否为合法回文串
+                right = isPalindrome(chars, i, j-1, false);     
+                // 只需要有一种情况为真即可
+                return left || right;
+            }
+            i++;
+            j--;
+        }
+        return true;
+    }
+}
+```
+
+执行结果：
+
+![image-20200903203958936](leetcode.assets/image-20200903203958936.png)
+
